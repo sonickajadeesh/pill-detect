@@ -2,7 +2,7 @@ use crate::modules::Patient;
 use dioxus::prelude::*;
 
 #[component]
-pub fn RegistrationForm() -> Element {
+pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
     let mut first_name = use_signal(String::new);
     let mut last_name = use_signal(String::new);
     let mut sex = use_signal(String::new);
@@ -81,8 +81,18 @@ pub fn RegistrationForm() -> Element {
             div { class: "register-card",
 
                 div { class: "register-header",
-                    h1 { "Patient Registration" }
-                    p { "Enter the patient's medical information." }
+
+                    div {
+                        h1 { "Patient Registration" }
+                        p { "Enter the patient's medical information." }
+                    }
+
+                    button {
+                        class: "modal-close",
+                        r#type: "button",
+                        onclick: move |_| on_close.call(()),
+                        "×"
+                    }
                 }
 
                 form { class: "register-form", onsubmit: submit,
