@@ -1,0 +1,93 @@
+.home-page {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    justify-content: center;
+    min-height: 96vh;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.project-name {
+    color: #1f2937;
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: -2px;
+    margin: 0;
+}
+
+.project-subheading {
+    color: #6b7280;
+    font-size: 18px;
+    margin: 8px 0 36px;
+}
+
+.home-page .register-button {
+    width: auto;
+    min-width: 220px;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-card {
+    position: relative;
+
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+
+    z-index: 10;
+
+    width: 32px;
+    height: 32px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #f3f4f6;
+    color: #374151;
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+@media (max-width: 600px) {
+    .project-name {
+        font-size: 44px;
+    }
+    .project-subheading {
+        font-size: 16px;
+    }
+}
