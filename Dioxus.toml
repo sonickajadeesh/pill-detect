@@ -1,21 +1,18 @@
 [application]
 
 [web.app]
-
 # HTML title tag content
 title = "Pill Detect"
+base_path = "pill-detect"
 
 # include `assets` in web platform
 [web.resource]
-
 # Additional CSS style files
 style = []
-
 # Additional JavaScript files
 script = []
 
 [web.resource.dev]
-
 # Javascript code file
 # serve: [dev-server] only
 script = []
