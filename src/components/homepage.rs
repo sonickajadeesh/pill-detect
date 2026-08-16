@@ -19,7 +19,7 @@ pub fn Homepage() -> Element {
     rsx! {
         div { class: "home-page",
 
-            h1 { class: "project-name", "Pill Detect" }
+            h1 { class: "project-name", "🩺 Pill Detect" }
 
             p { class: "project-subheading",
                 "Prescription Analysis • Medicine Details • Symptom Guidance • Drug Interaction"
