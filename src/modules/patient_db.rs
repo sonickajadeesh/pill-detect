@@ -33,21 +33,21 @@ pub fn add_patient(patient: Patient) -> Result<(), String> {
         .map_err(|err| format!("Failed to save patient: {:?}", err))
 }
 
-// pub fn update_patient(updated_patient: Patient) -> Result<(), String> {
-//     let mut patients = get_patients()?;
+pub fn update_patient(updated_patient: Patient) -> Result<(), String> {
+    let mut patients = get_patients()?;
 
-//     let Some(patient) = patients
-//         .iter_mut()
-//         .find(|patient| patient.id == updated_patient.id)
-//     else {
-//         return Err("Patient not found.".to_string());
-//     };
+    let Some(patient) = patients
+        .iter_mut()
+        .find(|patient| patient.id == updated_patient.id)
+    else {
+        return Err("Patient not found.".to_string());
+    };
 
-//     *patient = updated_patient;
+    *patient = updated_patient;
 
-//     LocalStorage::set(PATIENTS_KEY, patients)
-//         .map_err(|err| format!("Failed to update patient: {:?}", err))
-// }
+    LocalStorage::set(PATIENTS_KEY, patients)
+        .map_err(|err| format!("Failed to update patient: {:?}", err))
+}
 
 pub fn delete_patient(patient_id: &str) -> Result<(), String> {
     let mut patients = get_patients()?;

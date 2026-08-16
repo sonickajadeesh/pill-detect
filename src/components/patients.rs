@@ -1,8 +1,9 @@
 use crate::modules::patient_db::{delete_patient, Patient};
+use crate::modules::utilities::calculate_age;
 use dioxus::prelude::*;
 
 #[component]
-pub fn PatientList() -> Element {
+pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
     let mut patients = use_context::<Signal<Vec<Patient>>>();
 
     let mut delete = move |patient_id: String| {
@@ -24,27 +25,62 @@ pub fn PatientList() -> Element {
 
                     table { class: "patient-table",
 
+                        colgroup {
+                            col { class: "patient-name-col" }
+                            col { class: "patient-age-col" }
+                            col { class: "patient-sex-col" }
+                            col { class: "patient-blood-group-col" }
+                            col { class: "patient-actions-col" }
+                        }
+
                         thead {
                             tr {
                                 th { "Patient name" }
-                                th { "Date of birth" }
+                                th { "Age" }
                                 th { "Sex" }
+                                th { "Blood group" }
                                 th { "Actions" }
                             }
                         }
 
                         tbody {
                             for patient in patients.read().iter() {
-                                tr {
+                                tr { key: "{patient.id}",
+
                                     td { class: "patient-name",
                                         "{patient.first_name} {patient.last_name}"
                                     }
 
-                                    td { "{patient.date_of_birth}" }
+                                    td {
+                                        match calculate_age(&patient.date_of_birth) {
+                                            Some(age) => rsx! { "{age}" },
+                                            None => rsx! { "—" },
+                                        }
+                                    }
 
                                     td { class: "patient-sex", "{patient.sex}" }
 
-                                    td {
+                                    td { "{patient.blood_group}" }
+
+                                    td { class: "patient-actions",
+
+                                        // Edit
+                                        button {
+                                            class: "edit-button",
+                                            r#type: "button",
+
+                                            onclick: {
+                                                let patient = patient.clone();
+
+                                                move |_| {
+                                                    on_edit.call(patient.clone());
+                                                }
+                                            },
+
+                                            "🖉"
+                                        }
+
+                                        // Delete
                                         button {
                                             class: "delete-button",
                                             r#type: "button",
