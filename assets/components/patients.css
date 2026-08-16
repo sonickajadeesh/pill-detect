@@ -63,6 +63,19 @@
     font-size: 14px;
 }
 
+.delete-button {
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+    color: red;
+}
+
+.delete-button:active {
+    background: #fecaca;
+}
+
 @media (max-width: 600px) {
     .patient-list {
         width: 95%;

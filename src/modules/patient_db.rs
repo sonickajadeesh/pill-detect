@@ -49,17 +49,17 @@ pub fn add_patient(patient: Patient) -> Result<(), String> {
 //         .map_err(|err| format!("Failed to update patient: {:?}", err))
 // }
 
-// pub fn delete_patient(patient_id: &str) -> Result<(), String> {
-//     let mut patients = get_patients()?;
+pub fn delete_patient(patient_id: &str) -> Result<(), String> {
+    let mut patients = get_patients()?;
 
-//     let original_len = patients.len();
+    let original_len = patients.len();
 
-//     patients.retain(|patient| patient.id != patient_id);
+    patients.retain(|patient| patient.id != patient_id);
 
-//     if patients.len() == original_len {
-//         return Err("Patient not found.".to_string());
-//     }
+    if patients.len() == original_len {
+        return Err("Patient not found.".to_string());
+    }
 
-//     LocalStorage::set(PATIENTS_KEY, patients)
-//         .map_err(|err| format!("Failed to delete patient: {:?}", err))
-// }
+    LocalStorage::set(PATIENTS_KEY, patients)
+        .map_err(|err| format!("Failed to delete patient: {:?}", err))
+}
