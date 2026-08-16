@@ -2,7 +2,7 @@ mod components;
 mod modules;
 
 use components::footer::Footer;
-use components::home::Homepage;
+use components::homepage::Homepage;
 use dioxus::prelude::*;
 
 #[derive(Routable, Clone, PartialEq)]
@@ -26,7 +26,7 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 
-        document::Link { rel: "stylesheet", href: asset!("/assets/components/home.css") }
+        document::Link { rel: "stylesheet", href: asset!("/assets/components/homepage.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/components/patients.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/components/registration.css") }
 

@@ -1,4 +1,4 @@
 pub mod footer;
-pub mod home;
+pub mod homepage;
 pub mod patients;
 pub mod registeration;
