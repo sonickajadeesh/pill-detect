@@ -1,18 +1,10 @@
 use dioxus::prelude::*;
 
-use crate::modules::{api::prompt_ai, prompts::guidance_prompt, utilities::markdown_to_html};
-
-#[derive(Clone, PartialEq)]
-enum MessageRole {
-    User,
-    Assistant,
-}
-
-#[derive(Clone, PartialEq)]
-struct Message {
-    role: MessageRole,
-    content: String,
-}
+use crate::modules::{
+    api::prompt_ai,
+    chats::{Chat, Message, MessageRole, load_chats, markdown_to_html, save_chats},
+    prompts::guidance_prompt,
+};
 
 #[component]
 fn MarkdownMessage(content: String) -> Element {
@@ -26,10 +18,37 @@ fn MarkdownMessage(content: String) -> Element {
 #[component]
 pub fn Guidance() -> Element {
     let mut input = use_signal(String::new);
-    let mut messages = use_signal(Vec::<Message>::new);
+    let mut chats = use_signal(Vec::<Chat>::new);
+    let mut active_chat = use_signal(|| Option::<u64>::None);
+
     let mut loading = use_signal(|| false);
     let mut error = use_signal(|| Option::<String>::None);
 
+    // Load saved chats when the component starts.
+    use_effect(move || {
+        spawn(async move {
+            match load_chats().await {
+                Ok(saved_chats) => {
+                    chats.set(saved_chats);
+                    active_chat.set(None);
+                }
+
+                Err(err) => {
+                    error.set(Some(err.to_string()));
+                }
+            }
+        });
+    });
+
+    // Create a new conversation.
+    let mut create_chat = move || {
+        active_chat.set(None);
+        input.set(String::new());
+        error.set(None);
+        loading.set(false);
+    };
+
+    // Send a message.
     let mut send_message = move || {
         let prompt = input().trim().to_string();
 
@@ -37,17 +56,60 @@ pub fn Guidance() -> Element {
             return;
         }
 
+        // If there is no active chat, create one automatically.
+        let chat_id = match active_chat() {
+            Some(id) => id,
+
+            None => {
+                let id = js_sys::Date::now() as u64;
+
+                chats.write().push(Chat {
+                    id,
+                    title: prompt.chars().take(40).collect(),
+                    messages: Vec::new(),
+                });
+
+                active_chat.set(Some(id));
+
+                id
+            }
+        };
+
         input.set(String::new());
         error.set(None);
         loading.set(true);
 
-        messages.write().push(Message {
-            role: MessageRole::User,
-            content: prompt.clone(),
+        // Add the user's message to the active chat.
+        {
+            let mut all_chats = chats.write();
+
+            if let Some(chat) = all_chats.iter_mut().find(|chat| chat.id == chat_id) {
+                if chat.messages.is_empty() {
+                    chat.title = prompt.chars().take(40).collect();
+                }
+
+                chat.messages.push(Message {
+                    role: MessageRole::User,
+                    content: prompt.clone(),
+                });
+            }
+        }
+
+        // Get the current conversation history.
+        let history = chats()
+            .iter()
+            .find(|chat| chat.id == chat_id)
+            .map(|chat| chat.messages.clone())
+            .unwrap_or_default();
+
+        // Save the user's message immediately.
+        let saved_chats = chats();
+
+        spawn(async move {
+            let _ = save_chats(&saved_chats).await;
         });
 
-        let history = messages();
-
+        // Ask Gemini.
         spawn(async move {
             let conversation = history
                 .iter()
@@ -66,12 +128,25 @@ pub fn Guidance() -> Element {
 
             match prompt_ai(&prompt).await {
                 Ok(result) => {
-                    messages.write().push(Message {
-                        role: MessageRole::Assistant,
-                        content: result,
-                    });
+                    let mut all_chats = chats.write();
+
+                    if let Some(chat) = all_chats.iter_mut().find(|chat| chat.id == chat_id) {
+                        chat.messages.push(Message {
+                            role: MessageRole::Assistant,
+                            content: result,
+                        });
+                    }
 
                     loading.set(false);
+
+                    // Save the assistant response.
+                    let saved_chats = all_chats.clone();
+
+                    drop(all_chats);
+
+                    spawn(async move {
+                        let _ = save_chats(&saved_chats).await;
+                    });
                 }
 
                 Err(err) => {
@@ -82,10 +157,83 @@ pub fn Guidance() -> Element {
         });
     };
 
+    // Get messages for the currently selected chat.
+    let current_messages = chats()
+        .iter()
+        .find(|chat| Some(chat.id) == active_chat())
+        .map(|chat| chat.messages.clone())
+        .unwrap_or_default();
+
     rsx! {
         div { class: "guidance-page",
 
-            div { class: "guidance-container",
+            // Sidebar
+            aside { class: "guidance-sidebar",
+
+                button {
+                    class: "new-chat-button",
+
+                    onclick: move |_| {
+                        create_chat();
+                    },
+
+                    "+ New chat"
+                }
+
+                div {
+                    class: "chat-list",
+
+                    for chat in chats() {
+                        div {
+                            class: if Some(chat.id) == active_chat() {
+                                "chat-list-item active"
+                            } else {
+                                "chat-list-item"
+                            },
+
+                            button {
+                                class: "chat-select-button",
+
+                                onclick: move |_| {
+                                    active_chat.set(Some(chat.id));
+                                    input.set(String::new());
+                                    error.set(None);
+                                },
+
+                                "{chat.title}"
+                            }
+
+                            button {
+                                class: "chat-delete-button",
+
+                                onclick: move |_| {
+                                    let chat_id = chat.id;
+
+                                    chats.write().retain(|chat| chat.id != chat_id);
+
+                                    // If deleting the currently open chat,
+                                    // return to a blank/new-chat state.
+                                    if active_chat() == Some(chat_id) {
+                                        active_chat.set(None);
+                                        input.set(String::new());
+                                    }
+
+                                    let saved_chats = chats();
+
+                                    spawn(async move {
+                                        let _ = save_chats(&saved_chats).await;
+                                    });
+                                },
+
+                                "⨯"
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Main chat
+            div { class: "guidance-main",
 
                 div { class: "guidance-header",
 
@@ -98,17 +246,17 @@ pub fn Guidance() -> Element {
 
                 div { class: "guidance-card",
 
-                    // Chat messages
+                    // Messages
                     div { class: "guidance-messages",
 
-                        if messages().is_empty() {
+                        if current_messages.is_empty() {
                             div { class: "guidance-empty",
 
                                 p { "Ask me anything about medicines or health." }
                             }
                         }
 
-                        for message in messages() {
+                        for message in current_messages {
                             div {
                                 class: match message.role {
                                     MessageRole::User => "message message-user",
@@ -135,6 +283,7 @@ pub fn Guidance() -> Element {
                         }
                     }
 
+                    // Error
                     if let Some(message) = error() {
                         div { class: "guidance-error", "{message}" }
                     }
@@ -146,7 +295,6 @@ pub fn Guidance() -> Element {
                             class: "guidance-input",
                             r#type: "text",
                             placeholder: "Ask something...",
-
                             value: "{input}",
 
                             oninput: move |event| {

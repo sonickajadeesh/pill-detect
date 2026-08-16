@@ -3865,6 +3865,7 @@ dependencies = [
  "chrono",
  "dioxus",
  "gloo-storage",
+ "js-sys",
  "pulldown-cmark",
  "reqwest 0.13.4",
  "serde",
