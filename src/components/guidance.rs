@@ -17,12 +17,12 @@ fn MarkdownMessage(content: String) -> Element {
 
 #[component]
 pub fn Guidance() -> Element {
-    let mut input = use_signal(String::new);
-    let mut chats = use_signal(Vec::<Chat>::new);
     let mut active_chat = use_signal(|| Option::<u64>::None);
-
-    let mut loading = use_signal(|| false);
+    let mut chats = use_signal(Vec::<Chat>::new);
     let mut error = use_signal(|| Option::<String>::None);
+    let mut input = use_signal(String::new);
+    let mut loading = use_signal(|| false);
+    let mut sidebar_open = use_signal(|| false);
 
     // Load saved chats when the component starts.
     use_effect(move || {
@@ -168,13 +168,19 @@ pub fn Guidance() -> Element {
         div { class: "guidance-page",
 
             // Sidebar
-            aside { class: "guidance-sidebar",
+            aside {
+                class: if sidebar_open() {
+                    "guidance-sidebar sidebar-open"
+                } else {
+                    "guidance-sidebar"
+                },
 
                 button {
                     class: "new-chat-button",
 
                     onclick: move |_| {
                         create_chat();
+                        sidebar_open.set(false);
                     },
 
                     "+ New chat"
@@ -198,6 +204,7 @@ pub fn Guidance() -> Element {
                                     active_chat.set(Some(chat.id));
                                     input.set(String::new());
                                     error.set(None);
+                                    sidebar_open.set(false);
                                 },
 
                                 "{chat.title}"
@@ -211,8 +218,6 @@ pub fn Guidance() -> Element {
 
                                     chats.write().retain(|chat| chat.id != chat_id);
 
-                                    // If deleting the currently open chat,
-                                    // return to a blank/new-chat state.
                                     if active_chat() == Some(chat_id) {
                                         active_chat.set(None);
                                         input.set(String::new());
@@ -232,8 +237,28 @@ pub fn Guidance() -> Element {
                 }
             }
 
+            if sidebar_open() {
+                div {
+                    class: "sidebar-backdrop",
+
+                    onclick: move |_| {
+                        sidebar_open.set(false);
+                    },
+                }
+            }
+
             // Main chat
             div { class: "guidance-main",
+
+                button {
+                    class: "mobile-sidebar-button",
+
+                    onclick: move |_| {
+                        sidebar_open.set(true);
+                    },
+
+                    "☰"
+                }
 
                 div { class: "guidance-header",
 
