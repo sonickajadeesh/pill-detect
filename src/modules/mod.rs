@@ -1,2 +1,2 @@
-pub mod patient;
-pub use patient::Patient;
+pub mod patient_db;
+pub mod string;

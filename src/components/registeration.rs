@@ -1,8 +1,11 @@
-use crate::modules::Patient;
+use crate::modules::patient_db::{add_patient, Patient};
+use crate::modules::string::sentence_case;
 use dioxus::prelude::*;
 
 #[component]
 pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
+    let mut patients = use_context::<Signal<Vec<Patient>>>();
+
     let mut first_name = use_signal(String::new);
     let mut last_name = use_signal(String::new);
     let mut sex = use_signal(String::new);
@@ -59,8 +62,8 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
 
         let patient = Patient {
             id: uuid::Uuid::new_v4().to_string(),
-            first_name: first_name().trim().to_string(),
-            last_name: last_name().trim().to_string(),
+            first_name: sentence_case(&first_name()),
+            last_name: sentence_case(&last_name()),
             sex: sex(),
             date_of_birth: date_of_birth(),
             blood_group: blood_group(),
@@ -70,23 +73,37 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
             medical_conditions: medical_conditions().trim().to_string(),
         };
 
-        println!("{:#?}", patient);
+        match add_patient(patient.clone()) {
+            Ok(_) => {
+                patients.write().push(patient);
 
-        success.set("Patient registered successfully!".to_string());
+                first_name.set(String::new());
+                last_name.set(String::new());
+                sex.set(String::new());
+                date_of_birth.set(String::new());
+                blood_group.set(String::new());
+                height.set(String::new());
+                weight.set(String::new());
+                allergies.set(String::new());
+                medical_conditions.set(String::new());
+
+                success.set("Patient registered successfully!".to_string());
+            }
+
+            Err(err) => {
+                error.set(err);
+            }
+        }
     };
 
     rsx! {
         div { class: "register-page",
-
             div { class: "register-card",
-
                 div { class: "register-header",
-
                     div {
                         h1 { "Patient Registration" }
                         p { "Enter the patient's medical information." }
                     }
-
                     button {
                         class: "modal-close",
                         r#type: "button",
@@ -94,12 +111,9 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
                         "×"
                     }
                 }
-
                 form { class: "register-form", onsubmit: submit,
-
                     // First name + Last name
                     div { class: "form-row",
-
                         div { class: "form-group",
                             label { r#for: "first-name", "First name" }
 
@@ -111,7 +125,6 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
                                 oninput: move |event| first_name.set(event.value()),
                             }
                         }
-
                         div { class: "form-group",
                             label { r#for: "last-name", "Last name" }
 
@@ -127,33 +140,24 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
 
                     // Sex + Blood group
                     div { class: "form-row",
-
                         div { class: "form-group",
                             label { r#for: "sex", "Sex" }
-
                             select {
                                 id: "sex",
                                 value: "{sex}",
                                 onchange: move |event| sex.set(event.value()),
-
                                 option { value: "", disabled: true, "Select sex" }
-
                                 option { value: "male", "Male" }
-
                                 option { value: "female", "Female" }
                             }
                         }
-
                         div { class: "form-group",
                             label { r#for: "blood-group", "Blood group" }
-
                             select {
                                 id: "blood-group",
                                 value: "{blood_group}",
                                 onchange: move |event| blood_group.set(event.value()),
-
                                 option { value: "", disabled: true, "Select blood group" }
-
                                 option { value: "A+", "A+" }
                                 option { value: "A-", "A−" }
                                 option { value: "B+", "B+" }
@@ -168,25 +172,22 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
 
                     // Date of birth
                     div { class: "form-group",
-
                         label { r#for: "date-of-birth", "Date of birth" }
-
                         input {
                             id: "date-of-birth",
                             r#type: "date",
                             value: "{date_of_birth}",
-                            oninput: move |event| { date_of_birth.set(event.value()) },
+                            oninput: move |event| {
+                                date_of_birth.set(event.value());
+                            },
                         }
                     }
 
                     // Height + Weight
                     div { class: "form-row",
-
                         div { class: "form-group",
                             label { r#for: "height", "Height" }
-
                             div { class: "input-with-unit",
-
                                 input {
                                     id: "height",
                                     r#type: "number",
@@ -194,18 +195,17 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
                                     step: "1",
                                     placeholder: "160",
                                     value: "{height}",
-                                    oninput: move |event| height.set(event.value()),
+                                    oninput: move |event| {
+                                        height.set(event.value());
+                                    },
                                 }
-
                                 span { class: "input-unit", "cm" }
                             }
                         }
 
                         div { class: "form-group",
                             label { r#for: "weight", "Weight" }
-
                             div { class: "input-with-unit",
-
                                 input {
                                     id: "weight",
                                     r#type: "number",
@@ -213,9 +213,10 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
                                     step: "0.1",
                                     placeholder: "55",
                                     value: "{weight}",
-                                    oninput: move |event| weight.set(event.value()),
+                                    oninput: move |event| {
+                                        weight.set(event.value());
+                                    },
                                 }
-
                                 span { class: "input-unit", "kg" }
                             }
                         }
@@ -223,35 +224,33 @@ pub fn RegistrationForm(on_close: EventHandler<()>) -> Element {
 
                     // Allergies
                     div { class: "form-group",
-
                         label { r#for: "allergies",
                             "Allergies"
-
                             span { class: "optional", " (if any)" }
                         }
-
                         textarea {
                             id: "allergies",
                             placeholder: "e.g. Penicillin, peanuts...",
                             value: "{allergies}",
-                            oninput: move |event| allergies.set(event.value()),
+                            oninput: move |event| {
+                                allergies.set(event.value());
+                            },
                         }
                     }
 
                     // Medical conditions
                     div { class: "form-group",
-
                         label { r#for: "medical-conditions",
                             "Existing medical conditions"
-
                             span { class: "optional", " (if any)" }
                         }
-
                         textarea {
                             id: "medical-conditions",
                             placeholder: "e.g. Diabetes, hypertension...",
                             value: "{medical_conditions}",
-                            oninput: move |event| { medical_conditions.set(event.value()) },
+                            oninput: move |event| {
+                                medical_conditions.set(event.value());
+                            },
                         }
                     }
 

@@ -1,9 +1,9 @@
 .register-page {
     background: white;
+    overflow: hidden;
     padding: 20px;
     text-align: left;
 }
-
 .register-header {
     display: flex;
     justify-content: space-between;
@@ -115,7 +115,7 @@
 
 .register-button {
     width: 100%;
-    margin-top: 8px;
+    margin-top: 50px;
     padding: 12px 18px;
     border: none;
     border-radius: 6px;

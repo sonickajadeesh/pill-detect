@@ -6,7 +6,7 @@ pub fn Footer() -> Element {
         footer { class: "footer",
 
             p {
-                "Disclaimer: Pill Detect is not intended to provide medical diagnosis, treatment, or professional medical advice."
+                "Disclaimer: This is not intended to provide professional medical consultation."
             }
         }
     }

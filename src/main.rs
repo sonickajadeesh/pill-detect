@@ -19,11 +19,15 @@ fn main() {
 fn App() -> Element {
     rsx! {
         document::Title { "Pill Detect" }
-        document::Link { rel: "icon", href: asset!("/assets/logo.svg") }
+        document::Link { rel: "icon", href: "data:image/svg+xml,
+          <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+            <text y='0.9em' font-size='90'>🩺</text>
+          </svg>" }
         document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 
         document::Link { rel: "stylesheet", href: asset!("/assets/components/home.css") }
+        document::Link { rel: "stylesheet", href: asset!("/assets/components/patients.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/components/registration.css") }
 
         Router::<Route> {}
