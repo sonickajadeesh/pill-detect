@@ -15,7 +15,7 @@ pub struct Patient {
     pub medical_conditions: String,
 }
 
-const PATIENTS_KEY: &str = "patients";
+const PATIENTS_KEY: &str = "PATIENTS";
 
 pub fn get_patients() -> Result<Vec<Patient>, String> {
     match LocalStorage::get(PATIENTS_KEY) {
