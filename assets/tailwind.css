@@ -156,6 +156,9 @@
   }
 }
 @layer utilities {
+  .contents {
+    display: contents;
+  }
   .table {
     display: table;
   }
