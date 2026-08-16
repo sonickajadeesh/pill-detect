@@ -1,6 +1,9 @@
-use crate::modules::patient_db::{delete_patient, Patient};
-use crate::modules::utilities::calculate_age;
 use dioxus::prelude::*;
+
+use crate::modules::{
+    patient_db::{Patient, delete_patient},
+    utilities::calculate_age,
+};
 
 #[component]
 pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {

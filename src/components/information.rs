@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::modules::search::{MedicineInformation, identify_medicine, research_medicine};
+use crate::modules::prompts::{MedicineInformation, identify_medicine, research_medicine};
 
 #[component]
 pub fn Information() -> Element {

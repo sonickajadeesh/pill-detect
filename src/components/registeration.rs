@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::modules::patient_db::{add_patient, update_patient, Patient};
-use crate::modules::utilities::{is_valid_date, sentence_case};
+use crate::modules::{
+    patient_db::{Patient, add_patient, update_patient},
+    utilities::{is_valid_date, sentence_case},
+};
 
 #[component]
 pub fn RegistrationForm(on_close: EventHandler<()>, patient: Option<Patient>) -> Element {

@@ -2,6 +2,7 @@ mod components;
 mod modules;
 
 use components::footer::Footer;
+use components::guidance::Guidance;
 use components::homepage::Homepage;
 use components::information::Information;
 use dioxus::prelude::*;
@@ -13,6 +14,9 @@ pub enum Route {
 
     #[route("/information")]
     Information {},
+
+    #[route("/guidance")]
+    Guidance {},
 }
 
 fn main() {
@@ -40,6 +44,10 @@ fn App() -> Element {
 
         document::Link {
             rel: "stylesheet",
+            href: asset!("/assets/components/guidance.css"),
+        }
+        document::Link {
+            rel: "stylesheet",
             href: asset!("/assets/components/homepage.css"),
         }
         document::Link {
@@ -56,7 +64,8 @@ fn App() -> Element {
         }
 
         // Router::<Route> {}
-        Information {}
+        // Information {}
+        Guidance {}
         Footer {}
     }
 }
