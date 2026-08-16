@@ -60,3 +60,12 @@ pub async fn research_medicine(
 
     Ok(information)
 }
+
+pub fn guidance_prompt(conversation: &str) -> String {
+    format!(
+        r#"Converse naturally, using prior context for follow-ups. Be concise, clear, and medically responsible; don’t diagnose or overstate uncertain information.
+        Conversation: {}
+        Respond to the latest user message."#,
+        conversation
+    )
+}
