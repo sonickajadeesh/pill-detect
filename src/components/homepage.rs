@@ -1,6 +1,6 @@
 use crate::components::patients::PatientList;
 use crate::components::registeration::RegistrationForm;
-use crate::modules::patient_db::{get_patients, Patient};
+use crate::modules::patient_db::{Patient, get_patients};
 use dioxus::prelude::*;
 
 #[component]
