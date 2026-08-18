@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use crate::components::navbar::Navbar;
 use crate::modules::{
     database::{Chat, Message, MessageRole, add_chat, delete_chat, get_chats, update_chat},
     prompts::guidance,
@@ -162,7 +163,11 @@ pub fn Guidance(patient_id: String) -> Element {
         .unwrap_or_default();
 
     rsx! {
-        main { class: "flex h-[96vh] overflow-hidden bg-slate-50 p-6",
+        Navbar {
+            patient_id: patient_id.clone(),
+        }
+
+        main { class: "flex h-[90vh] overflow-hidden bg-slate-50 p-6",
 
             // Sidebar
             aside { class: if sidebar_open() { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 shadow-[4px_0_20px_rgb(0_0_0_/_10%)] transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:rounded-[14px] sm:p-3 sm:shadow-none" } else { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 -translate-x-full flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:translate-x-0 sm:rounded-[14px] sm:p-3" },
