@@ -69,7 +69,7 @@ pub fn add_patient(mut patient: Patient) -> Result<(), String> {
         .map_err(|err| format!("Failed to save patient: {:?}", err))
 }
 
-pub fn update_patient(updated_patient: Patient) -> Result<(), String> {
+pub fn update_patient(mut updated_patient: Patient) -> Result<(), String> {
     let mut patients = get_patients()?;
 
     let Some(patient) = patients
@@ -78,6 +78,9 @@ pub fn update_patient(updated_patient: Patient) -> Result<(), String> {
     else {
         return Err("Patient not found.".to_string());
     };
+
+    updated_patient.search_history = patient.search_history.clone();
+    updated_patient.chats = patient.chats.clone();
 
     *patient = updated_patient;
 
