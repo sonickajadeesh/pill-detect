@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
 
 use crate::modules::prompts::{MedicineInformation, identify_medicine, research_medicine};
 use crate::modules::search_history::{
