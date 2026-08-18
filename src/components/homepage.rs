@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use crate::Route;
 use crate::components::{patients::PatientList, registeration::RegistrationForm};
 use crate::modules::database::{Patient, get_patients};
 
@@ -11,6 +12,8 @@ pub fn Homepage() -> Element {
     let patients = use_signal(|| get_patients().unwrap_or_default());
 
     use_context_provider(|| patients);
+
+    let navigator = use_navigator();
 
     rsx! {
         main { class: "flex min-h-[96vh] flex-col items-center justify-center px-5 py-10 text-center",
@@ -24,9 +27,16 @@ pub fn Homepage() -> Element {
             }
 
             PatientList {
-                on_edit: move |patient| {
+                on_edit: move |patient: Patient| {
                     editing_patient.set(Some(patient));
                     show_registration.set(true);
+                },
+
+                on_select: move |patient: Patient| {
+                    navigator
+                        .push(Route::Information {
+                            patient_id: patient.id,
+                        });
                 },
             }
 
@@ -58,6 +68,7 @@ pub fn Homepage() -> Element {
 
                         RegistrationForm {
                             patient: editing_patient(),
+
                             on_close: move |_| {
                                 show_registration.set(false);
                                 editing_patient.set(None);

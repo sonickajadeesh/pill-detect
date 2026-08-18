@@ -12,8 +12,8 @@ pub enum Route {
     #[route("/")]
     Homepage {},
 
-    #[route("/information")]
-    Information {},
+    #[route("/:patient_id/search/")]
+    Information { patient_id: String },
 
     #[route("/guidance")]
     Guidance {},

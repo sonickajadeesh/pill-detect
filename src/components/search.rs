@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
 
-use crate::modules::prompts::{MedicineInformation, identify_medicine, research_medicine};
-use crate::modules::search_history::{
-    SearchHistory, clear_search_history, load_search_history, save_search_history,
+use crate::modules::database::{
+    SearchHistory, add_search_history, clear_search_history, get_search_history,
 };
+use crate::modules::prompts::{MedicineInformation, identify_medicine, research_medicine};
 
 #[component]
-pub fn Information() -> Element {
+pub fn Information(patient_id: String) -> Element {
     let mut search_term = use_signal(String::new);
     let mut loading = use_signal(|| false);
     let mut error = use_signal(|| Option::<String>::None);
@@ -15,37 +15,26 @@ pub fn Information() -> Element {
     let mut information = use_signal(|| Option::<MedicineInformation>::None);
 
     let mut history = use_signal(Vec::<SearchHistory>::new);
-    let mut history_loaded = use_signal(|| false);
 
-    use_effect(move || {
-        spawn(async move {
-            match load_search_history().await {
-                Ok(saved_history) => {
-                    history.set(saved_history);
-                }
+    // Clone the patient ID for the history-loading effect.
+    let history_patient_id = patient_id.clone();
 
-                Err(err) => {
-                    eprintln!("Failed to load search history: {err}");
-                }
-            }
-
-            history_loaded.set(true);
-        });
-    });
-
-    use_effect(move || {
-        let current_history = history();
-
-        if !history_loaded() {
-            return;
+    // Load search history for the selected patient.
+    use_effect(move || match get_search_history(&history_patient_id) {
+        Ok(saved_history) => {
+            history.set(saved_history);
         }
 
-        spawn(async move {
-            if let Err(err) = save_search_history(&current_history).await {
-                eprintln!("Failed to save search history: {err}");
-            }
-        });
+        Err(err) => {
+            eprintln!("Failed to load search history: {err}");
+        }
     });
+
+    // Clone the patient ID for the research button.
+    let research_patient_id = patient_id.clone();
+
+    // Clone the patient ID for the clear button.
+    let clear_patient_id = patient_id.clone();
 
     rsx! {
         main { class: "min-h-[96vh] max-w-[900px] mx-auto bg-slate-50 px-6 py-12",
@@ -182,42 +171,53 @@ pub fn Information() -> Element {
                             r#type: "button",
                             disabled: loading(),
 
-                            onclick: move |_| {
-                                let product_name = product.clone();
-                                let generic_name = generic.clone();
+                            onclick: {
+                                let patient_id = research_patient_id.clone();
 
-                                loading.set(true);
-                                error.set(None);
+                                move |_| {
+                                    let product_name = product.clone();
+                                    let generic_name = generic.clone();
+                                    let patient_id = patient_id.clone();
 
-                                spawn(async move {
-                                    match research_medicine(&generic_name).await {
-                                        Ok(result) => {
-                                            loading.set(false);
-                                            information.set(Some(result));
+                                    loading.set(true);
+                                    error.set(None);
 
-                                            // Only add to history after
-                                            // the user confirms the medicine
-                                            // and research succeeds.
-                                            history
-                                                .with_mut(|items| {
-                                                    items.retain(|item| { item.generic != generic_name });
-                                                    items
-                                                        .insert(
-                                                            0,
-                                                            SearchHistory {
-                                                                product: product_name,
-                                                                generic: generic_name,
-                                                            },
-                                                        );
-                                                    items.truncate(10);
-                                                });
+                                    spawn(async move {
+                                        match research_medicine(&generic_name).await {
+                                            Ok(result) => {
+                                                loading.set(false);
+                                                information.set(Some(result));
+
+                                                let search = SearchHistory {
+                                                    product: product_name,
+                                                    generic: generic_name,
+                                                };
+                                                match add_search_history(&patient_id, search) {
+                                                    Ok(()) => {
+                                                        match get_search_history(&patient_id) {
+                                                            Ok(updated_history) => {
+                                                                history.set(updated_history);
+                                                            }
+
+                                                            Err(err) => {
+                                                                eprintln!("Failed to reload search history: {err}");
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Err(err) => {
+                                                        eprintln!("Failed to save search history: {err}");
+                                                    }
+                                                }
+                                            }
+
+                                            Err(err) => {
+                                                loading.set(false);
+                                                error.set(Some(err.to_string()));
+                                            }
                                         }
-                                        Err(err) => {
-                                            loading.set(false);
-                                            error.set(Some(err.to_string()));
-                                        }
-                                    }
-                                });
+                                    });
+                                }
                             },
 
                             if loading() {
@@ -243,14 +243,20 @@ pub fn Information() -> Element {
 
                             r#type: "button",
 
-                            onclick: move |_| {
-                                history.set(Vec::new());
+                            onclick: {
+                                let patient_id = clear_patient_id.clone();
 
-                                spawn(async move {
-                                    if let Err(err) = clear_search_history().await {
-                                        eprintln!("Failed to clear search history: {err}");
+                                move |_| {
+                                    match clear_search_history(&patient_id) {
+                                        Ok(()) => {
+                                            history.set(Vec::new());
+                                        }
+
+                                        Err(err) => {
+                                            eprintln!("Failed to clear search history: {err}");
+                                        }
                                     }
-                                });
+                                }
                             },
 
                             "Clear"

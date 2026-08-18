@@ -112,6 +112,9 @@ pub fn RegistrationForm(on_close: EventHandler<()>, patient: Option<Patient>) ->
             weight: weight().parse::<f32>().unwrap_or(0.0),
             allergies: allergies().trim().to_string(),
             medical_conditions: medical_conditions().trim().to_string(),
+
+            search_history: Vec::new(),
+            chats: Vec::new(),
         };
 
         if is_editing {

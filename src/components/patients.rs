@@ -6,7 +6,7 @@ use crate::modules::{
 };
 
 #[component]
-pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
+pub fn PatientList(on_edit: EventHandler<Patient>, on_select: EventHandler<Patient>) -> Element {
     let mut patients = use_context::<Signal<Vec<Patient>>>();
 
     let mut delete = move |patient_id: String| {
@@ -70,7 +70,21 @@ pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
                                     class: "hover:bg-gray-50",
 
                                     td { class: "max-w-0 overflow-hidden text-ellipsis whitespace-nowrap border-b border-gray-100 px-2 py-3 text-xs font-medium text-gray-900 sm:px-4 sm:py-3.5 sm:text-sm",
-                                        "{patient.first_name} {patient.last_name}"
+
+                                        button {
+                                            class: "cursor-pointer hover:text-blue-600 hover:underline",
+                                            r#type: "button",
+
+                                            onclick: {
+                                                let patient = patient.clone();
+
+                                                move |_| {
+                                                    on_select.call(patient.clone());
+                                                }
+                                            },
+
+                                            "{patient.first_name} {patient.last_name}"
+                                        }
                                     }
 
                                     td { class: "border-b border-gray-100 px-1 py-3 text-center text-xs text-gray-700 sm:px-4 sm:py-3.5 sm:text-sm",
@@ -93,6 +107,7 @@ pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
 
                                         div { class: "flex items-center justify-center gap-3",
 
+                                            // Edit
                                             button {
                                                 class: "cursor-pointer text-sm font-bold text-gray-600 hover:text-blue-500 sm:text-base",
                                                 r#type: "button",
@@ -108,6 +123,7 @@ pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
                                                 "🖉"
                                             }
 
+                                            // Delete
                                             button {
                                                 class: "cursor-pointer text-xl leading-none text-gray-600 hover:text-red-500 sm:text-[25px]",
                                                 r#type: "button",
