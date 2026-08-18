@@ -39,33 +39,11 @@ fn App() -> Element {
             <text y='0.9em' font-size='90'>🩺</text>
           </svg>",
         }
-        document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/components/guidance.css"),
-        }
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/components/homepage.css"),
-        }
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/components/information.css"),
-        }
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/components/patients.css"),
-        }
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/components/registration.css"),
-        }
-
-        // Router::<Route> {}
+        Router::<Route> {}
+        // Guidance {}
         // Information {}
-        Guidance {}
         Footer {}
     }
 }

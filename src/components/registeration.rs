@@ -128,7 +128,6 @@ pub fn RegistrationForm(on_close: EventHandler<()>, patient: Option<Patient>) ->
                 .as_ref()
                 .map(|patient| patient.id.clone())
                 .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
-
             first_name: sentence_case(&first_name()),
             last_name: sentence_case(&last_name()),
             sex: sex(),
@@ -153,10 +152,7 @@ pub fn RegistrationForm(on_close: EventHandler<()>, patient: Option<Patient>) ->
 
                     success.set("Patient updated successfully!".to_string());
                 }
-
-                Err(err) => {
-                    error.set(err);
-                }
+                Err(err) => error.set(err),
             }
         } else {
             match add_patient(patient.clone()) {
@@ -175,232 +171,226 @@ pub fn RegistrationForm(on_close: EventHandler<()>, patient: Option<Patient>) ->
 
                     success.set("Patient registered successfully!".to_string());
                 }
-
-                Err(err) => {
-                    error.set(err);
-                }
+                Err(err) => error.set(err),
             }
         }
     };
 
     rsx! {
-        div { class: "register-page",
+        main { class: "bg-white p-5 text-left",
 
-            div { class: "register-card",
+            header { class: "mb-5 flex items-start justify-between",
 
-                div { class: "register-header",
-
-                    div {
-                        h1 {
-                            if is_editing {
-                                "Edit Patient"
-                            } else {
-                                "Patient Registration"
-                            }
-                        }
-
-                        p {
-                            if is_editing {
-                                "Update the patient's medical information."
-                            } else {
-                                "Enter the patient's medical information."
-                            }
+                div {
+                    h1 { class: "mb-2 text-[28px] font-bold text-gray-800",
+                        if is_editing {
+                            "Edit Patient"
+                        } else {
+                            "Patient Registration"
                         }
                     }
 
-                    button {
-                        class: "modal-close",
-                        r#type: "button",
-                        onclick: move |_| on_close.call(()),
-                        "×"
+                    p { class: "text-gray-500",
+                        if is_editing {
+                            "Update the patient's medical information."
+                        } else {
+                            "Enter the patient's medical information."
+                        }
                     }
                 }
 
-                form { class: "register-form", onsubmit: submit,
+                button {
+                    class: "text-2xl leading-none text-gray-400 hover:text-gray-700",
+                    r#type: "button",
+                    onclick: move |_| on_close.call(()),
+                    "×"
+                }
+            }
 
-                    // First name + Last name
-                    div { class: "form-row",
+            form { class: "flex flex-col gap-[18px]", onsubmit: submit,
 
-                        div { class: "form-group",
+                div { class: "grid grid-cols-1 gap-4 sm:grid-cols-2",
 
-                            label { r#for: "first-name", "First name" }
+                    label { class: "flex flex-col gap-1.5",
 
-                            input {
-                                id: "first-name",
-                                r#type: "text",
-                                placeholder: "Sonicka",
-                                value: "{first_name}",
-                                oninput: move |event| first_name.set(event.value()),
-                            }
-                        }
-
-                        div { class: "form-group",
-
-                            label { r#for: "last-name", "Last name" }
-
-                            input {
-                                id: "last-name",
-                                r#type: "text",
-                                placeholder: "Jadeesh",
-                                value: "{last_name}",
-                                oninput: move |event| last_name.set(event.value()),
-                            }
-                        }
-                    }
-
-                    // Sex + Blood group
-                    div { class: "form-row",
-
-                        div { class: "form-group",
-
-                            label { r#for: "sex", "Sex" }
-
-                            select {
-                                id: "sex",
-                                value: "{sex}",
-                                onchange: move |event| sex.set(event.value()),
-
-                                option { value: "", disabled: true, "Select sex" }
-
-                                option { value: "male", "Male" }
-
-                                option { value: "female", "Female" }
-                            }
-                        }
-
-                        div { class: "form-group",
-
-                            label { r#for: "blood-group", "Blood group" }
-
-                            select {
-                                id: "blood-group",
-                                value: "{blood_group}",
-                                onchange: move |event| blood_group.set(event.value()),
-
-                                option { value: "", disabled: true, "Select blood group" }
-
-                                option { value: "A+", "A+" }
-                                option { value: "A-", "A−" }
-                                option { value: "B+", "B+" }
-                                option { value: "B-", "B−" }
-                                option { value: "AB+", "AB+" }
-                                option { value: "AB-", "AB−" }
-                                option { value: "O+", "O+" }
-                                option { value: "O-", "O−" }
-                            }
-                        }
-                    }
-
-                    // Date of birth
-                    div { class: "form-group",
-
-                        label { r#for: "date-of-birth", "Date of birth" }
+                        span { class: "text-sm font-semibold text-gray-700", "First name" }
 
                         input {
-                            id: "date-of-birth",
-                            r#type: "date",
-                            value: "{date_of_birth}",
-                            oninput: move |event| date_of_birth.set(event.value()),
+                            class: "w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                            id: "first-name",
+                            r#type: "text",
+                            placeholder: "Sonicka",
+                            value: "{first_name}",
+                            oninput: move |event| first_name.set(event.value()),
                         }
                     }
 
-                    // Height + Weight
-                    div { class: "form-row",
+                    label { class: "flex flex-col gap-1.5",
 
-                        div { class: "form-group",
+                        span { class: "text-sm font-semibold text-gray-700", "Last name" }
 
-                            label { r#for: "height", "Height" }
+                        input {
+                            class: "w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                            id: "last-name",
+                            r#type: "text",
+                            placeholder: "Jadeesh",
+                            value: "{last_name}",
+                            oninput: move |event| last_name.set(event.value()),
+                        }
+                    }
+                }
 
-                            div { class: "input-with-unit",
+                div { class: "grid grid-cols-1 gap-4 sm:grid-cols-2",
 
-                                input {
-                                    id: "height",
-                                    r#type: "number",
-                                    min: "0",
-                                    step: "1",
-                                    placeholder: "160",
-                                    value: "{height}",
-                                    oninput: move |event| height.set(event.value()),
-                                }
+                    label { class: "flex flex-col gap-1.5",
 
-                                span { class: "input-unit", "cm" }
+                        span { class: "text-sm font-semibold text-gray-700", "Sex" }
+
+                        select {
+                            class: "w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                            id: "sex",
+                            value: "{sex}",
+                            onchange: move |event| sex.set(event.value()),
+
+                            option { value: "", disabled: true, "Select sex" }
+                            option { value: "male", "Male" }
+                            option { value: "female", "Female" }
+                        }
+                    }
+
+                    label { class: "flex flex-col gap-1.5",
+
+                        span { class: "text-sm font-semibold text-gray-700", "Blood group" }
+
+                        select {
+                            class: "w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                            id: "blood-group",
+                            value: "{blood_group}",
+                            onchange: move |event| blood_group.set(event.value()),
+
+                            option { value: "", disabled: true, "Select blood group" }
+                            option { value: "A+", "A+" }
+                            option { value: "A-", "A−" }
+                            option { value: "B+", "B+" }
+                            option { value: "B-", "B−" }
+                            option { value: "AB+", "AB+" }
+                            option { value: "AB-", "AB−" }
+                            option { value: "O+", "O+" }
+                            option { value: "O-", "O−" }
+                        }
+                    }
+                }
+
+                label { class: "flex flex-col gap-1.5",
+
+                    span { class: "text-sm font-semibold text-gray-700", "Date of birth" }
+
+                    input {
+                        class: "w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                        id: "date-of-birth",
+                        r#type: "date",
+                        value: "{date_of_birth}",
+                        oninput: move |event| date_of_birth.set(event.value()),
+                    }
+                }
+
+                div { class: "grid grid-cols-1 gap-4 sm:grid-cols-2",
+
+                    label { class: "flex flex-col gap-1.5",
+
+                        span { class: "text-sm font-semibold text-gray-700", "Height" }
+
+                        div { class: "flex items-center gap-2",
+
+                            input {
+                                class: "w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                                id: "height",
+                                r#type: "number",
+                                min: "0",
+                                step: "1",
+                                placeholder: "160",
+                                value: "{height}",
+                                oninput: move |event| height.set(event.value()),
                             }
+
+                            span { class: "text-sm text-gray-500", "cm" }
                         }
+                    }
 
-                        div { class: "form-group",
+                    label { class: "flex flex-col gap-1.5",
 
-                            label { r#for: "weight", "Weight" }
+                        span { class: "text-sm font-semibold text-gray-700", "Weight" }
 
-                            div { class: "input-with-unit",
+                        div { class: "flex items-center gap-2",
 
-                                input {
-                                    id: "weight",
-                                    r#type: "number",
-                                    min: "0",
-                                    step: "0.1",
-                                    placeholder: "55",
-                                    value: "{weight}",
-                                    oninput: move |event| weight.set(event.value()),
-                                }
-
-                                span { class: "input-unit", "kg" }
+                            input {
+                                class: "w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                                id: "weight",
+                                r#type: "number",
+                                min: "0",
+                                step: "0.1",
+                                placeholder: "55",
+                                value: "{weight}",
+                                oninput: move |event| weight.set(event.value()),
                             }
+
+                            span { class: "text-sm text-gray-500", "kg" }
                         }
                     }
+                }
 
-                    // Allergies
-                    div { class: "form-group",
+                label { class: "flex flex-col gap-1.5",
 
-                        label { r#for: "allergies",
-
-                            "Allergies"
-
-                            span { class: "optional", " (if any)" }
-                        }
-
-                        textarea {
-                            id: "allergies",
-                            placeholder: "e.g. Penicillin, peanuts...",
-                            value: "{allergies}",
-                            oninput: move |event| allergies.set(event.value()),
-                        }
+                    span { class: "text-sm font-semibold text-gray-700",
+                        "Allergies"
+                        span { class: "font-normal text-gray-400", " (if any)" }
                     }
 
-                    // Medical conditions
-                    div { class: "form-group",
+                    textarea {
+                        class: "min-h-[90px] w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                        id: "allergies",
+                        placeholder: "e.g. Penicillin, peanuts...",
+                        value: "{allergies}",
+                        oninput: move |event| allergies.set(event.value()),
+                    }
+                }
 
-                        label { r#for: "medical-conditions",
+                label { class: "flex flex-col gap-1.5",
 
-                            "Existing medical conditions"
-
-                            span { class: "optional", " (if any)" }
-                        }
-
-                        textarea {
-                            id: "medical-conditions",
-                            placeholder: "e.g. Diabetes, hypertension...",
-                            value: "{medical_conditions}",
-                            oninput: move |event| medical_conditions.set(event.value()),
-                        }
+                    span { class: "text-sm font-semibold text-gray-700",
+                        "Existing medical conditions"
+                        span { class: "font-normal text-gray-400", " (if any)" }
                     }
 
-                    // Success
-                    if !success().is_empty() {
-                        div { class: "form-success", "{success}" }
+                    textarea {
+                        class: "min-h-[90px] w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2.5 text-[15px] text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10",
+                        id: "medical-conditions",
+                        placeholder: "e.g. Diabetes, hypertension...",
+                        value: "{medical_conditions}",
+                        oninput: move |event| medical_conditions.set(event.value()),
                     }
+                }
 
-                    // Error
-                    if !error().is_empty() {
-                        div { class: "form-error", "{error}" }
+                if !success().is_empty() {
+                    div { class: "rounded-md border border-green-200 bg-green-50 px-3 py-2.5 text-sm text-green-700",
+                        "{success}"
                     }
+                }
 
-                    button { class: "register-button", r#type: "submit",
+                if !error().is_empty() {
+                    div { class: "rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700",
+                        "{error}"
+                    }
+                }
 
-                        if is_editing {
-                            "Update Patient"
-                        } else {
-                            "Register Patient"
-                        }
+                button {
+                    class: "w-full rounded-md bg-blue-600 px-[18px] py-3 text-[15px] font-semibold text-white hover:bg-blue-700 active:bg-blue-800",
+                    r#type: "submit",
+
+                    if is_editing {
+                        "Update Patient"
+                    } else {
+                        "Register Patient"
                     }
                 }
             }

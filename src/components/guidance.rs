@@ -11,7 +11,10 @@ fn MarkdownMessage(content: String) -> Element {
     let html = markdown_to_html(&content);
 
     rsx! {
-        div { class: "markdown-content", dangerous_inner_html: "{html}" }
+        div {
+            class: "[&_p]:mb-3 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_em]:italic [&_ul]:my-2.5 [&_ul]:pl-6 [&_ol]:my-2.5 [&_ol]:pl-6 [&_li]:my-1 [&_blockquote]:my-3 [&_blockquote]:border-l-[3px] [&_blockquote]:border-slate-300 [&_blockquote]:pl-3.5 [&_blockquote]:text-slate-500 [&_code]:rounded [&_code]:bg-slate-200 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.9em] [&_pre]:my-3 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-200 [&_pre]:p-3",
+            dangerous_inner_html: "{html}",
+        }
     }
 }
 
@@ -24,7 +27,6 @@ pub fn Guidance() -> Element {
     let mut loading = use_signal(|| false);
     let mut sidebar_open = use_signal(|| false);
 
-    // Load saved chats when the component starts.
     use_effect(move || {
         spawn(async move {
             match load_chats().await {
@@ -32,7 +34,6 @@ pub fn Guidance() -> Element {
                     chats.set(saved_chats);
                     active_chat.set(None);
                 }
-
                 Err(err) => {
                     error.set(Some(err.to_string()));
                 }
@@ -40,7 +41,6 @@ pub fn Guidance() -> Element {
         });
     });
 
-    // Create a new conversation.
     let mut create_chat = move || {
         active_chat.set(None);
         input.set(String::new());
@@ -48,7 +48,6 @@ pub fn Guidance() -> Element {
         loading.set(false);
     };
 
-    // Send a message.
     let mut send_message = move || {
         let prompt = input().trim().to_string();
 
@@ -56,10 +55,8 @@ pub fn Guidance() -> Element {
             return;
         }
 
-        // If there is no active chat, create one automatically.
         let chat_id = match active_chat() {
             Some(id) => id,
-
             None => {
                 let id = js_sys::Date::now() as u64;
 
@@ -70,7 +67,6 @@ pub fn Guidance() -> Element {
                 });
 
                 active_chat.set(Some(id));
-
                 id
             }
         };
@@ -79,7 +75,6 @@ pub fn Guidance() -> Element {
         error.set(None);
         loading.set(true);
 
-        // Add the user's message to the active chat.
         {
             let mut all_chats = chats.write();
 
@@ -95,21 +90,18 @@ pub fn Guidance() -> Element {
             }
         }
 
-        // Get the current conversation history.
         let history = chats()
             .iter()
             .find(|chat| chat.id == chat_id)
             .map(|chat| chat.messages.clone())
             .unwrap_or_default();
 
-        // Save the user's message immediately.
         let saved_chats = chats();
 
         spawn(async move {
             let _ = save_chats(&saved_chats).await;
         });
 
-        // Ask Gemini.
         spawn(async move {
             let conversation = history
                 .iter()
@@ -124,9 +116,7 @@ pub fn Guidance() -> Element {
                 .collect::<Vec<_>>()
                 .join("\n\n");
 
-            let prompt = guidance_prompt(&conversation);
-
-            match prompt_ai(&prompt).await {
+            match prompt_ai(&guidance_prompt(&conversation)).await {
                 Ok(result) => {
                     let mut all_chats = chats.write();
 
@@ -139,9 +129,7 @@ pub fn Guidance() -> Element {
 
                     loading.set(false);
 
-                    // Save the assistant response.
                     let saved_chats = all_chats.clone();
-
                     drop(all_chats);
 
                     spawn(async move {
@@ -157,7 +145,6 @@ pub fn Guidance() -> Element {
         });
     };
 
-    // Get messages for the currently selected chat.
     let current_messages = chats()
         .iter()
         .find(|chat| Some(chat.id) == active_chat())
@@ -165,18 +152,13 @@ pub fn Guidance() -> Element {
         .unwrap_or_default();
 
     rsx! {
-        div { class: "guidance-page",
+        main { class: "flex h-[96vh] overflow-hidden bg-slate-50 p-6",
 
             // Sidebar
-            aside {
-                class: if sidebar_open() {
-                    "guidance-sidebar sidebar-open"
-                } else {
-                    "guidance-sidebar"
-                },
+            aside { class: if sidebar_open() { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 shadow-[4px_0_20px_rgb(0_0_0_/_10%)] transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:rounded-[14px] sm:p-3 sm:shadow-none" } else { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 -translate-x-full flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:translate-x-0 sm:rounded-[14px] sm:p-3" },
 
                 button {
-                    class: "new-chat-button",
+                    class: "w-full rounded-[10px] bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700",
 
                     onclick: move |_| {
                         create_chat();
@@ -186,19 +168,13 @@ pub fn Guidance() -> Element {
                     "+ New chat"
                 }
 
-                div {
-                    class: "chat-list",
+                div { class: "mt-4 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
 
                     for chat in chats() {
-                        div {
-                            class: if Some(chat.id) == active_chat() {
-                                "chat-list-item active"
-                            } else {
-                                "chat-list-item"
-                            },
+                        div { class: if Some(chat.id) == active_chat() { "mb-1 flex w-full items-center overflow-hidden rounded-lg bg-blue-50" } else { "mb-1 flex w-full items-center overflow-hidden rounded-lg hover:bg-slate-100" },
 
                             button {
-                                class: "chat-select-button",
+                                class: if Some(chat.id) == active_chat() { "min-w-0 flex-1 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap bg-transparent px-3 py-2.5 text-left text-sm font-semibold text-blue-700" } else { "min-w-0 flex-1 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap bg-transparent px-3 py-2.5 text-left text-sm text-slate-600" },
 
                                 onclick: move |_| {
                                     active_chat.set(Some(chat.id));
@@ -211,7 +187,7 @@ pub fn Guidance() -> Element {
                             }
 
                             button {
-                                class: "chat-delete-button",
+                                class: "mr-0.5 h-9 w-9 flex-shrink-0 cursor-pointer rounded-md bg-transparent text-slate-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100",
 
                                 onclick: move |_| {
                                     let chat_id = chat.id;
@@ -237,45 +213,43 @@ pub fn Guidance() -> Element {
                 }
             }
 
+            // Mobile backdrop
             if sidebar_open() {
                 div {
-                    class: "sidebar-backdrop",
+                    class: "fixed inset-0 z-[99] bg-black/30 sm:hidden",
 
-                    onclick: move |_| {
-                        sidebar_open.set(false);
-                    },
+                    onclick: move |_| sidebar_open.set(false),
                 }
             }
 
-            // Main chat
-            div { class: "guidance-main",
+            // Main
+            section { class: "flex min-w-0 flex-1 flex-col pl-0 sm:pl-6",
 
                 button {
-                    class: "mobile-sidebar-button",
+                    class: "mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] border border-slate-200 bg-white text-xl text-slate-700 sm:hidden",
 
-                    onclick: move |_| {
-                        sidebar_open.set(true);
-                    },
+                    onclick: move |_| sidebar_open.set(true),
 
                     "☰"
                 }
 
-                div { class: "guidance-header",
+                header { class: "mb-6 flex-shrink-0",
 
-                    h1 { class: "guidance-title", "Guidance 💬" }
+                    h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
+                        "Guidance 💬"
+                    }
 
-                    p { class: "guidance-subtitle",
+                    p { class: "mt-2 text-base text-slate-500",
                         "Ask questions and have a conversation about medicines and health."
                     }
                 }
 
-                div { class: "guidance-card",
+                section { class: "flex min-h-0 flex-1 flex-col overflow-hidden",
 
-                    // Messages
-                    div { class: "guidance-messages",
+                    div { class: "min-h-0 flex-1 overflow-y-auto px-1 pt-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
 
                         if current_messages.is_empty() {
-                            div { class: "guidance-empty",
+                            div { class: "flex h-full items-center justify-center text-center text-slate-400",
 
                                 p { "Ask me anything about medicines or health." }
                             }
@@ -284,11 +258,19 @@ pub fn Guidance() -> Element {
                         for message in current_messages {
                             div {
                                 class: match message.role {
-                                    MessageRole::User => "message message-user",
-                                    MessageRole::Assistant => "message message-assistant",
+                                    MessageRole::User => "mb-[18px] flex justify-end",
+                                    MessageRole::Assistant => "mb-[18px] flex justify-start",
                                 },
 
-                                div { class: "message-content",
+                                div {
+                                    class: match message.role {
+                                        MessageRole::User => {
+                                            "max-w-[75%] overflow-wrap-anywhere break-words rounded-[18px] rounded-br-[5px] bg-blue-600 px-4 py-3 text-[15px] leading-[1.6] text-white"
+                                        }
+                                        MessageRole::Assistant => {
+                                            "max-w-[75%] overflow-wrap-anywhere break-words rounded-[18px] rounded-bl-[5px] bg-slate-200 px-4 py-3 text-[15px] leading-[1.6] text-slate-700"
+                                        }
+                                    },
 
                                     match message.role {
                                         MessageRole::User => rsx! { "{message.content}" },
@@ -301,23 +283,32 @@ pub fn Guidance() -> Element {
                         }
 
                         if loading() {
-                            div { class: "message message-assistant",
+                            div { class: "mb-[18px] flex justify-start",
 
-                                div { class: "message-content", "Thinking..." }
+                                div { class: "rounded-[18px] rounded-bl-[5px] bg-slate-200 px-4 py-3 text-[15px] leading-[1.6] text-slate-700",
+                                    "Thinking..."
+                                }
                             }
                         }
                     }
 
-                    // Error
                     if let Some(message) = error() {
-                        div { class: "guidance-error", "{message}" }
+                        div { class: "mb-3 flex-shrink-0 rounded-[10px] border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-700",
+                            "{message}"
+                        }
                     }
 
-                    // Input
-                    div { class: "guidance-input-row",
+                    form {
+                        class: "flex flex-shrink-0 gap-2.5 border-t border-slate-200 pt-3",
+
+                        onsubmit: move |event| {
+                            event.prevent_default();
+                            send_message();
+                        },
 
                         input {
-                            class: "guidance-input",
+                            class: "min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-[15px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-600/10",
+
                             r#type: "text",
                             placeholder: "Ask something...",
                             value: "{input}",
@@ -325,21 +316,13 @@ pub fn Guidance() -> Element {
                             oninput: move |event| {
                                 input.set(event.value());
                             },
-
-                            onkeydown: move |event| {
-                                if event.key() == Key::Enter {
-                                    send_message();
-                                }
-                            },
                         }
 
                         button {
-                            class: "guidance-button",
-                            disabled: loading(),
+                            class: "rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60",
 
-                            onclick: move |_| {
-                                send_message();
-                            },
+                            r#type: "submit",
+                            disabled: loading(),
 
                             if loading() {
                                 "..."
