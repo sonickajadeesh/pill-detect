@@ -28,36 +28,36 @@ pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
 
                 div { class: "w-full overflow-x-auto rounded-lg border border-gray-200",
 
-                    table { class: "w-full min-w-[500px] table-fixed border-collapse bg-white text-left",
+                    table { class: "w-full table-fixed border-collapse bg-white text-left",
 
                         colgroup {
                             col {}
-                            col { class: "w-[50px]" }
-                            col { class: "w-[70px]" }
-                            col { class: "w-32" }
-                            col { class: "w-[90px]" }
+                            col { class: "w-[40px] sm:w-[50px]" }
+                            col { class: "w-[55px] sm:w-[70px]" }
+                            col { class: "w-[65px] sm:w-32" }
+                            col { class: "w-[65px] sm:w-[90px]" }
                         }
 
                         thead { class: "bg-gray-50",
 
                             tr {
-                                th { class: "border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.03em] text-gray-500",
-                                    "Patient name"
+                                th { class: "border-b border-gray-200 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:px-4 sm:py-3 sm:text-xs",
+                                    "Patient Name"
                                 }
 
-                                th { class: "border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.03em] text-gray-500",
+                                th { class: "border-b border-gray-200 px-1 py-2 text-[10px] font-semibold uppercase tracking-wide text-center text-gray-500 sm:px-4 sm:py-3 sm:text-xs",
                                     "Age"
                                 }
 
-                                th { class: "border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.03em] text-gray-500",
+                                th { class: "border-b border-gray-200 px-1 py-2 text-[10px] font-semibold uppercase tracking-wide text-center text-gray-500 sm:px-4 sm:py-3 sm:text-xs",
                                     "Sex"
                                 }
 
-                                th { class: "border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.03em] text-gray-500",
-                                    "Blood group"
+                                th { class: "border-b border-gray-200 px-1 py-2 text-[10px] font-semibold uppercase tracking-wide text-center text-gray-500 sm:px-4 sm:py-3 sm:text-xs",
+                                    "Blood Group"
                                 }
 
-                                th { class: "border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.03em] text-gray-500",
+                                th { class: "border-b border-gray-200 px-1 py-2 text-[10px] font-semibold uppercase tracking-wide text-center text-gray-500 sm:px-4 sm:py-3 sm:text-xs",
                                     "Actions"
                                 }
                             }
@@ -69,11 +69,11 @@ pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
                                     key: "{patient.id}",
                                     class: "hover:bg-gray-50",
 
-                                    td { class: "max-w-0 overflow-hidden text-ellipsis whitespace-nowrap border-b border-gray-100 px-4 py-3.5 text-sm font-medium text-gray-900",
+                                    td { class: "max-w-0 overflow-hidden text-ellipsis whitespace-nowrap border-b border-gray-100 px-2 py-3 text-xs font-medium text-gray-900 sm:px-4 sm:py-3.5 sm:text-sm",
                                         "{patient.first_name} {patient.last_name}"
                                     }
 
-                                    td { class: "border-b border-gray-100 px-4 py-3.5 text-sm text-gray-700",
+                                    td { class: "border-b border-gray-100 px-1 py-3 text-center text-xs text-gray-700 sm:px-4 sm:py-3.5 sm:text-sm",
 
                                         match calculate_age(&patient.date_of_birth) {
                                             Some(age) => rsx! { "{age}" },
@@ -81,20 +81,20 @@ pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
                                         }
                                     }
 
-                                    td { class: "border-b border-gray-100 px-4 py-3.5 text-sm capitalize text-gray-700",
+                                    td { class: "border-b border-gray-100 px-1 py-3 text-xs capitalize text-gray-700 sm:px-4 sm:py-3.5 sm:text-sm",
                                         "{patient.sex}"
                                     }
 
-                                    td { class: "border-b border-gray-100 px-4 py-3.5 text-sm text-gray-700",
+                                    td { class: "border-b border-gray-100 px-1 py-3 text-center text-xs text-gray-700 sm:px-4 sm:py-3.5 sm:text-sm",
                                         "{patient.blood_group}"
                                     }
 
-                                    td { class: "border-b border-gray-100 px-4 py-3.5",
+                                    td { class: "border-b border-gray-100 px-1 py-3 sm:px-4 sm:py-3.5",
 
-                                        div { class: "flex items-center gap-3",
+                                        div { class: "flex items-center justify-center gap-3",
 
                                             button {
-                                                class: "cursor-pointer pt-0.5 text-base font-bold text-gray-600 hover:text-blue-500",
+                                                class: "cursor-pointer text-sm font-bold text-gray-600 hover:text-blue-500 sm:text-base",
                                                 r#type: "button",
 
                                                 onclick: {
@@ -109,7 +109,7 @@ pub fn PatientList(on_edit: EventHandler<Patient>) -> Element {
                                             }
 
                                             button {
-                                                class: "cursor-pointer text-[25px] leading-none text-gray-600 hover:text-red-500",
+                                                class: "cursor-pointer text-xl leading-none text-gray-600 hover:text-red-500 sm:text-[25px]",
                                                 r#type: "button",
 
                                                 onclick: {
