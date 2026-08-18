@@ -56,6 +56,7 @@ pub fn get_patients() -> Result<Vec<Patient>, String> {
     }
 }
 
+// Patient Ops
 pub fn add_patient(mut patient: Patient) -> Result<(), String> {
     let mut patients = get_patients()?;
 
@@ -103,6 +104,7 @@ pub fn delete_patient(patient_id: &str) -> Result<(), String> {
         .map_err(|err| format!("Failed to delete patient: {:?}", err))
 }
 
+// Search Ops
 pub fn get_search_history(patient_id: &str) -> Result<Vec<SearchHistory>, String> {
     let patients = get_patients()?;
 
@@ -140,4 +142,70 @@ pub fn clear_search_history(patient_id: &str) -> Result<(), String> {
 
     LocalStorage::set(PATIENTS_KEY, patients)
         .map_err(|err| format!("Failed to clear search history: {:?}", err))
+}
+
+// Chat Ops
+pub fn get_chats(patient_id: &str) -> Result<Vec<Chat>, String> {
+    let patients = get_patients()?;
+
+    let patient = patients
+        .iter()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())?;
+
+    Ok(patient.chats.clone())
+}
+
+pub fn add_chat(patient_id: &str, chat: Chat) -> Result<(), String> {
+    let mut patients = get_patients()?;
+
+    let patient = patients
+        .iter_mut()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())?;
+
+    patient.chats.push(chat);
+
+    LocalStorage::set(PATIENTS_KEY, patients)
+        .map_err(|err| format!("Failed to save chat: {:?}", err))
+}
+
+pub fn update_chat(patient_id: &str, updated_chat: Chat) -> Result<(), String> {
+    let mut patients = get_patients()?;
+
+    let patient = patients
+        .iter_mut()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())?;
+
+    let chat = patient
+        .chats
+        .iter_mut()
+        .find(|chat| chat.id == updated_chat.id)
+        .ok_or_else(|| "Chat not found.".to_string())?;
+
+    *chat = updated_chat;
+
+    LocalStorage::set(PATIENTS_KEY, patients)
+        .map_err(|err| format!("Failed to update chat: {:?}", err))
+}
+
+pub fn delete_chat(patient_id: &str, chat_id: u64) -> Result<(), String> {
+    let mut patients = get_patients()?;
+
+    let patient = patients
+        .iter_mut()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())?;
+
+    let original_len = patient.chats.len();
+
+    patient.chats.retain(|chat| chat.id != chat_id);
+
+    if patient.chats.len() == original_len {
+        return Err("Chat not found.".to_string());
+    }
+
+    LocalStorage::set(PATIENTS_KEY, patients)
+        .map_err(|err| format!("Failed to delete chat: {:?}", err))
 }

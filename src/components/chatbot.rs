@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
 
 use crate::modules::{
-    api::prompt_ai,
-    chats::{Chat, Message, MessageRole, load_chats, markdown_to_html, save_chats},
-    prompts::guidance_prompt,
+    database::{Chat, Message, MessageRole, add_chat, delete_chat, get_chats, update_chat},
+    prompts::guidance,
+    utilities::markdown_to_html,
 };
 
 #[component]
@@ -19,7 +19,7 @@ fn MarkdownMessage(content: String) -> Element {
 }
 
 #[component]
-pub fn Guidance() -> Element {
+pub fn Guidance(patient_id: String) -> Element {
     let mut active_chat = use_signal(|| Option::<u64>::None);
     let mut chats = use_signal(Vec::<Chat>::new);
     let mut error = use_signal(|| Option::<String>::None);
@@ -27,18 +27,18 @@ pub fn Guidance() -> Element {
     let mut loading = use_signal(|| false);
     let mut sidebar_open = use_signal(|| false);
 
-    use_effect(move || {
-        spawn(async move {
-            match load_chats().await {
-                Ok(saved_chats) => {
-                    chats.set(saved_chats);
-                    active_chat.set(None);
-                }
-                Err(err) => {
-                    error.set(Some(err.to_string()));
-                }
-            }
-        });
+    // Load chats belonging to this patient.
+    let load_patient_id = patient_id.clone();
+
+    use_effect(move || match get_chats(&load_patient_id) {
+        Ok(saved_chats) => {
+            chats.set(saved_chats);
+            active_chat.set(None);
+        }
+
+        Err(err) => {
+            error.set(Some(err));
+        }
     });
 
     let mut create_chat = move || {
@@ -47,6 +47,9 @@ pub fn Guidance() -> Element {
         error.set(None);
         loading.set(false);
     };
+
+    // Patient ID used when creating/updating chats.
+    let chat_patient_id = patient_id.clone();
 
     let mut send_message = move || {
         let prompt = input().trim().to_string();
@@ -57,14 +60,22 @@ pub fn Guidance() -> Element {
 
         let chat_id = match active_chat() {
             Some(id) => id,
+
             None => {
                 let id = js_sys::Date::now() as u64;
 
-                chats.write().push(Chat {
+                let chat = Chat {
                     id,
                     title: prompt.chars().take(40).collect(),
                     messages: Vec::new(),
-                });
+                };
+
+                chats.write().push(chat.clone());
+
+                if let Err(err) = add_chat(&chat_patient_id, chat) {
+                    error.set(Some(err));
+                    return;
+                }
 
                 active_chat.set(Some(id));
                 id
@@ -87,6 +98,12 @@ pub fn Guidance() -> Element {
                     role: MessageRole::User,
                     content: prompt.clone(),
                 });
+
+                if let Err(err) = update_chat(&chat_patient_id, chat.clone()) {
+                    error.set(Some(err));
+                    loading.set(false);
+                    return;
+                }
             }
         }
 
@@ -96,11 +113,7 @@ pub fn Guidance() -> Element {
             .map(|chat| chat.messages.clone())
             .unwrap_or_default();
 
-        let saved_chats = chats();
-
-        spawn(async move {
-            let _ = save_chats(&saved_chats).await;
-        });
+        let ai_patient_id = chat_patient_id.clone();
 
         spawn(async move {
             let conversation = history
@@ -116,7 +129,7 @@ pub fn Guidance() -> Element {
                 .collect::<Vec<_>>()
                 .join("\n\n");
 
-            match prompt_ai(&guidance_prompt(&conversation)).await {
+            match guidance(&conversation).await {
                 Ok(result) => {
                     let mut all_chats = chats.write();
 
@@ -125,16 +138,13 @@ pub fn Guidance() -> Element {
                             role: MessageRole::Assistant,
                             content: result,
                         });
+
+                        if let Err(err) = update_chat(&ai_patient_id, chat.clone()) {
+                            error.set(Some(err));
+                        }
                     }
 
                     loading.set(false);
-
-                    let saved_chats = all_chats.clone();
-                    drop(all_chats);
-
-                    spawn(async move {
-                        let _ = save_chats(&saved_chats).await;
-                    });
                 }
 
                 Err(err) => {
@@ -171,7 +181,7 @@ pub fn Guidance() -> Element {
                 div { class: "mt-4 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
 
                     for chat in chats() {
-                        div { class: if Some(chat.id) == active_chat() { "mb-1 flex w-full items-center overflow-hidden rounded-lg bg-blue-50" } else { "mb-1 flex w-full items-center overflow-hidden rounded-lg hover:bg-slate-100" },
+                        div { class: if Some(chat.id) == active_chat() { "group mb-1 flex w-full items-center overflow-hidden rounded-lg bg-blue-50" } else { "group mb-1 flex w-full items-center overflow-hidden rounded-lg hover:bg-slate-100" },
 
                             button {
                                 class: if Some(chat.id) == active_chat() { "min-w-0 flex-1 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap bg-transparent px-3 py-2.5 text-left text-sm font-semibold text-blue-700" } else { "min-w-0 flex-1 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap bg-transparent px-3 py-2.5 text-left text-sm text-slate-600" },
@@ -187,23 +197,30 @@ pub fn Guidance() -> Element {
                             }
 
                             button {
-                                class: "mr-0.5 h-9 w-9 flex-shrink-0 cursor-pointer rounded-md bg-transparent text-slate-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100",
+                                class: "mr-0.5 h-9 w-9 flex-shrink-0 cursor-pointer rounded-md bg-transparent text-slate-400 transition-opacity hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100",
 
-                                onclick: move |_| {
+                                onclick: {
+                                    let patient_id = patient_id.clone();
                                     let chat_id = chat.id;
 
-                                    chats.write().retain(|chat| chat.id != chat_id);
+                                    move |_| {
+                                        match delete_chat(&patient_id, chat_id) {
+                                            Ok(()) => {
+                                                chats
+                                                    .write()
+                                                    .retain(|chat| chat.id != chat_id);
 
-                                    if active_chat() == Some(chat_id) {
-                                        active_chat.set(None);
-                                        input.set(String::new());
+                                                if active_chat() == Some(chat_id) {
+                                                    active_chat.set(None);
+                                                    input.set(String::new());
+                                                }
+                                            }
+
+                                            Err(err) => {
+                                                error.set(Some(err));
+                                            }
+                                        }
                                     }
-
-                                    let saved_chats = chats();
-
-                                    spawn(async move {
-                                        let _ = save_chats(&saved_chats).await;
-                                    });
                                 },
 
                                 "⨯"
@@ -267,6 +284,7 @@ pub fn Guidance() -> Element {
                                         MessageRole::User => {
                                             "max-w-[75%] overflow-wrap-anywhere break-words rounded-[18px] rounded-br-[5px] bg-blue-600 px-4 py-3 text-[15px] leading-[1.6] text-white"
                                         }
+
                                         MessageRole::Assistant => {
                                             "max-w-[75%] overflow-wrap-anywhere break-words rounded-[18px] rounded-bl-[5px] bg-slate-200 px-4 py-3 text-[15px] leading-[1.6] text-slate-700"
                                         }

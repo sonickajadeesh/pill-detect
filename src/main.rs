@@ -15,8 +15,8 @@ pub enum Route {
     #[route("/:patient_id/search/")]
     Information { patient_id: String },
 
-    #[route("/guidance")]
-    Guidance {},
+    #[route("/:patient_id/guidance")]
+    Guidance { patient_id: String },
 }
 
 fn main() {
@@ -42,8 +42,6 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 
         Router::<Route> {}
-        // Guidance {}
-        // Information {}
         Footer {}
     }
 }
