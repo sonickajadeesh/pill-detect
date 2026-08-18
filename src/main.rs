@@ -1,10 +1,10 @@
 mod components;
 mod modules;
 
+use components::chatbot::Guidance;
 use components::footer::Footer;
-use components::guidance::Guidance;
 use components::homepage::Homepage;
-use components::information::Information;
+use components::search::Information;
 use dioxus::prelude::*;
 
 #[derive(Routable, Clone, PartialEq)]

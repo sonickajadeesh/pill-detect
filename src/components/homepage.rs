@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::{patients::PatientList, registeration::RegistrationForm};
-use crate::modules::patient_db::{Patient, get_patients};
+use crate::modules::database::{Patient, get_patients};
 
 #[component]
 pub fn Homepage() -> Element {

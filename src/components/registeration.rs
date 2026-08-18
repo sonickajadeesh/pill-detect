@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::modules::{
-    patient_db::{Patient, add_patient, update_patient},
+    database::{Patient, add_patient, update_patient},
     utilities::{is_valid_date, sentence_case},
 };
 

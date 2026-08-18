@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::modules::{
-    patient_db::{Patient, delete_patient},
+    database::{Patient, delete_patient},
     utilities::calculate_age,
 };
 
