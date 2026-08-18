@@ -2,6 +2,12 @@ use dioxus::prelude::*;
 
 use crate::modules::prompts::{MedicineInformation, identify_medicine, research_medicine};
 
+#[derive(Clone, PartialEq)]
+struct SearchHistory {
+    product: String,
+    generic: String,
+}
+
 #[component]
 pub fn Information() -> Element {
     let mut search_term = use_signal(String::new);
@@ -10,6 +16,8 @@ pub fn Information() -> Element {
 
     let mut medicine = use_signal(|| Option::<(String, String)>::None);
     let mut information = use_signal(|| Option::<MedicineInformation>::None);
+
+    let mut history = use_signal(Vec::<SearchHistory>::new);
 
     rsx! {
         main { class: "min-h-[96vh] max-w-[900px] mx-auto bg-slate-50 px-6 py-12",
@@ -22,6 +30,7 @@ pub fn Information() -> Element {
                 "Search for a medicine to learn more about it."
             }
 
+            // Search
             section { class: "rounded-[14px] border border-slate-200 bg-white p-5",
 
                 form {
@@ -93,12 +102,14 @@ pub fn Information() -> Element {
                 }
             }
 
+            // Error
             if let Some(message) = error() {
                 p { class: "mt-4 rounded-[10px] border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700",
                     "{message}"
                 }
             }
 
+            // Search result
             if let Some((product, generic)) = medicine() {
                 section { class: "mt-6 rounded-[14px] border border-slate-200 bg-white p-7 text-slate-700 leading-relaxed",
 
@@ -108,11 +119,15 @@ pub fn Information() -> Element {
                         }
 
                         p { class: "mt-3.5", "Uses: {info.uses}" }
+
                         p { class: "mt-3.5", "Dosage: {info.dosage}" }
+
                         p { class: "mt-3.5", "Side effects: {info.side_effects}" }
+
                         p { class: "mt-3.5", "Warnings: {info.warnings}" }
 
                         p { class: "mt-3.5",
+
                             "Prescription required: "
 
                             if info.prescription {
@@ -126,14 +141,21 @@ pub fn Information() -> Element {
                             "Is this the medicine you're looking for?"
                         }
 
-                        p { class: "mt-3.5", "{product} → {generic}" }
+                        div { class: "mt-4 rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3",
+
+                            div { class: "font-medium text-slate-900", "{product}" }
+
+                            div { class: "mt-0.5 text-sm text-slate-500", "{generic}" }
+                        }
 
                         button {
                             class: "mt-6 rounded-[10px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60",
 
+                            r#type: "button",
                             disabled: loading(),
 
                             onclick: move |_| {
+                                let product_name = product.clone();
                                 let generic_name = generic.clone();
 
                                 loading.set(true);
@@ -143,9 +165,24 @@ pub fn Information() -> Element {
                                     match research_medicine(&generic_name).await {
                                         Ok(result) => {
                                             loading.set(false);
-                                            information.set(Some(result));
-                                        }
 
+                                            information.set(Some(result));
+
+                                            // Only add to history after the user confirms the medicine.
+                                            history
+                                                .with_mut(|items| {
+                                                    items.retain(|item| { item.generic != generic_name });
+                                                    items
+                                                        .insert(
+                                                            0,
+                                                            SearchHistory {
+                                                                product: product_name,
+                                                                generic: generic_name,
+                                                            },
+                                                        );
+                                                    items.truncate(10);
+                                                });
+                                        }
                                         Err(err) => {
                                             loading.set(false);
                                             error.set(Some(err.to_string()));
@@ -158,6 +195,56 @@ pub fn Information() -> Element {
                                 "Researching..."
                             } else {
                                 "Yes, continue"
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Past search history
+            // This intentionally comes AFTER the search result.
+            if !history().is_empty() {
+                section { class: "mt-6",
+
+                    div { class: "mb-3 flex items-center justify-between",
+
+                        h2 { class: "text-lg font-semibold text-slate-900", "Past Searches" }
+
+                        button {
+                            class: "text-sm text-slate-500 transition hover:text-red-600",
+
+                            r#type: "button",
+
+                            onclick: move |_| {
+                                history.set(Vec::new());
+                            },
+
+                            "Clear"
+                        }
+                    }
+
+                    div { class: "space-y-2",
+
+                        for item in history() {
+                            button {
+                                class: "w-full rounded-[10px] border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-blue-300 hover:bg-blue-50",
+
+                                r#type: "button",
+
+                                onclick: {
+                                    let item = item.clone();
+
+                                    move |_| {
+                                        search_term.set(item.product.clone());
+                                        medicine.set(Some((item.product.clone(), item.generic.clone())));
+                                        information.set(None);
+                                        error.set(None);
+                                    }
+                                },
+
+                                div { class: "font-medium text-slate-900", "{item.product}" }
+
+                                div { class: "mt-0.5 text-sm text-slate-500", "{item.generic}" }
                             }
                         }
                     }
