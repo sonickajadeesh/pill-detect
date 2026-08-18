@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use pulldown_cmark::{Parser, html};
 use serde::{Deserialize, Serialize};
 
-const CHATS_STORAGE_KEY: &str = "CHATS";
+const CHATS_STORAGE_KEY: &str = "CHAT_HISTORY";
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum MessageRole {

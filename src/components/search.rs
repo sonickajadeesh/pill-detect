@@ -1,12 +1,10 @@
 use dioxus::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::modules::prompts::{MedicineInformation, identify_medicine, research_medicine};
-
-#[derive(Clone, PartialEq)]
-struct SearchHistory {
-    product: String,
-    generic: String,
-}
+use crate::modules::search_history::{
+    SearchHistory, clear_search_history, load_search_history, save_search_history,
+};
 
 #[component]
 pub fn Information() -> Element {
@@ -18,19 +16,50 @@ pub fn Information() -> Element {
     let mut information = use_signal(|| Option::<MedicineInformation>::None);
 
     let mut history = use_signal(Vec::<SearchHistory>::new);
+    let mut history_loaded = use_signal(|| false);
+
+    use_effect(move || {
+        spawn(async move {
+            match load_search_history().await {
+                Ok(saved_history) => {
+                    history.set(saved_history);
+                }
+
+                Err(err) => {
+                    eprintln!("Failed to load search history: {err}");
+                }
+            }
+
+            history_loaded.set(true);
+        });
+    });
+
+    use_effect(move || {
+        let current_history = history();
+
+        if !history_loaded() {
+            return;
+        }
+
+        spawn(async move {
+            if let Err(err) = save_search_history(&current_history).await {
+                eprintln!("Failed to save search history: {err}");
+            }
+        });
+    });
 
     rsx! {
         main { class: "min-h-[96vh] max-w-[900px] mx-auto bg-slate-50 px-6 py-12",
 
             h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
-                "Medicine Information 💊"
+                "Medicine Information 🔎"
             }
 
             p { class: "mt-2 mb-8 text-base text-slate-500",
                 "Search for a medicine to learn more about it."
             }
 
-            // Search
+            // Search section
             section { class: "rounded-[14px] border border-slate-200 bg-white p-5",
 
                 form {
@@ -102,7 +131,7 @@ pub fn Information() -> Element {
                 }
             }
 
-            // Error
+            // Error message
             if let Some(message) = error() {
                 p { class: "mt-4 rounded-[10px] border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700",
                     "{message}"
@@ -165,10 +194,11 @@ pub fn Information() -> Element {
                                     match research_medicine(&generic_name).await {
                                         Ok(result) => {
                                             loading.set(false);
-
                                             information.set(Some(result));
 
-                                            // Only add to history after the user confirms the medicine.
+                                            // Only add to history after
+                                            // the user confirms the medicine
+                                            // and research succeeds.
                                             history
                                                 .with_mut(|items| {
                                                     items.retain(|item| { item.generic != generic_name });
@@ -202,7 +232,6 @@ pub fn Information() -> Element {
             }
 
             // Past search history
-            // This intentionally comes AFTER the search result.
             if !history().is_empty() {
                 section { class: "mt-6",
 
@@ -217,6 +246,12 @@ pub fn Information() -> Element {
 
                             onclick: move |_| {
                                 history.set(Vec::new());
+
+                                spawn(async move {
+                                    if let Err(err) = clear_search_history().await {
+                                        eprintln!("Failed to clear search history: {err}");
+                                    }
+                                });
                             },
 
                             "Clear"
