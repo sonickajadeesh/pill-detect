@@ -155,9 +155,7 @@ pub fn RegistrationForm(on_close: EventHandler<()>, patient: Option<Patient>) ->
             if submitted() {
                 div { class: "w-full",
 
-                    div { class: "w-full px-3 py-4 text-center",
-                        "{success}"
-                    }
+                    div { class: "w-full px-3 py-4 text-center", "{success}" }
 
                     button {
                         class: "mx-auto mt-3 block rounded-md bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700",
