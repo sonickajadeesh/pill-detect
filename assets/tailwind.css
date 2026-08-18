@@ -338,11 +338,17 @@
   .w-32 {
     width: calc(var(--spacing) * 32);
   }
+  .w-\[50\%\] {
+    width: 50%;
+  }
   .w-\[50px\] {
     width: 50px;
   }
   .w-\[70px\] {
     width: 70px;
+  }
+  .w-\[90\%\] {
+    width: 90%;
   }
   .w-\[90px\] {
     width: 90px;
@@ -941,6 +947,11 @@
   .sm\:hidden {
     @media (width >= 40rem) {
       display: none;
+    }
+  }
+  .sm\:w-1\/2 {
+    @media (width >= 40rem) {
+      width: calc(1/2 * 100%);
     }
   }
   .sm\:w-60 {
