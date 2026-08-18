@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use pulldown_cmark::{Parser, html};
 use serde::{Deserialize, Serialize};
 
 const CHATS_STORAGE_KEY: &str = "CHAT_HISTORY";
@@ -49,13 +48,4 @@ pub async fn save_chats(chats: &[Chat]) -> Result<(), Box<dyn std::error::Error>
     let _: () = document::eval(&script).join().await?;
 
     Ok(())
-}
-
-pub fn markdown_to_html(markdown: &str) -> String {
-    let parser = Parser::new(markdown);
-
-    let mut html_output = String::new();
-    html::push_html(&mut html_output, parser);
-
-    html_output
 }

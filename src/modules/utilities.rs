@@ -1,4 +1,5 @@
 use chrono::{Datelike, Local, NaiveDate};
+use pulldown_cmark::{Parser, html};
 
 pub fn sentence_case(value: &str) -> String {
     let mut chars = value.trim().chars();
@@ -72,4 +73,13 @@ pub fn validate(
     }
 
     None
+}
+
+pub fn markdown_to_html(markdown: &str) -> String {
+    let parser = Parser::new(markdown);
+
+    let mut html_output = String::new();
+    html::push_html(&mut html_output, parser);
+
+    html_output
 }
