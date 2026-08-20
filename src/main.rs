@@ -9,7 +9,6 @@ use dioxus::prelude::*;
 
 #[derive(Routable, Clone, PartialEq)]
 pub enum Route {
-    // #[layout(Layout)]
     #[route("/")]
     Homepage {},
 
@@ -47,12 +46,3 @@ fn App() -> Element {
         Footer {}
     }
 }
-
-// #[component]
-// fn Layout() -> Element {
-//     rsx! {
-//         Navbar {}
-//         Outlet::<Route> {}
-//         Footer {}
-//     }
-// }
