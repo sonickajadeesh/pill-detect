@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 use crate::Route;
 use crate::components::{patients::PatientList, registeration::RegistrationForm};
+use crate::modules::api::clear_api_key;
 use crate::modules::database::{Patient, get_patients};
 
 #[component]
@@ -16,7 +17,26 @@ pub fn Homepage() -> Element {
     let navigator = use_navigator();
 
     rsx! {
-        main { class: "flex min-h-[96vh] flex-col items-center justify-center px-5 py-10 text-center",
+        main { class: "relative flex min-h-[96vh] flex-col items-center justify-center px-5 py-10 text-center",
+
+            // API key button
+            button {
+                class: "absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm transition hover:bg-slate-200 active:bg-slate-200",
+
+                r#type: "button",
+
+                title: "Clear stored API key",
+
+                onclick: move |_| {
+                    spawn(async move {
+                        if let Err(err) = clear_api_key().await {
+                            eprintln!("Failed to change API key: {err}");
+                        }
+                    });
+                },
+
+                "🔑"
+            }
 
             h1 { class: "m-0 text-[44px] font-bold tracking-[-2px] text-gray-800 sm:text-[64px]",
                 "🩺 Pill Detect"
@@ -42,6 +62,7 @@ pub fn Homepage() -> Element {
 
             button {
                 class: "min-w-[220px] rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 active:bg-blue-800",
+
                 r#type: "button",
 
                 onclick: move |_| {

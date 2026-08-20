@@ -35,6 +35,42 @@ pub async fn get_api_key() -> Result<String, Box<dyn std::error::Error>> {
     Ok(key)
 }
 
+pub async fn clear_api_key() -> Result<String, Box<dyn std::error::Error>> {
+    let key: String = document::eval(&format!(
+        r#"
+        const confirmed = window.confirm(
+            "Clear the stored Gemini API key?"
+        );
+
+        if (!confirmed) {{
+            return "";
+        }}
+
+        localStorage.removeItem("{API_KEY}");
+
+        const entered = window.prompt(
+            "Enter your new Gemini API key",
+            ""
+        );
+
+        if (entered && entered.trim() !== "") {{
+            localStorage.setItem("{API_KEY}", entered.trim());
+            return entered.trim();
+        }}
+
+        return "";
+        "#
+    ))
+    .join()
+    .await?;
+
+    if key.trim().is_empty() {
+        return Err("API key was not changed.".into());
+    }
+
+    Ok(key)
+}
+
 pub async fn prompt_ai(search_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     let api_key = get_api_key().await?;
 
