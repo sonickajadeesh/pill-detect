@@ -1,16 +1,19 @@
 mod components;
 mod modules;
 
-use components::chatbot::Guidance;
-use components::footer::Footer;
-use components::homepage::Homepage;
-use components::search::Information;
+use components::{
+    chatbot::Guidance, dashboard::Dashboard, footer::Footer, homepage::Homepage,
+    search::Information,
+};
 use dioxus::prelude::*;
 
 #[derive(Routable, Clone, PartialEq)]
 pub enum Route {
     #[route("/")]
     Homepage {},
+
+    #[route("/:patient_id/dashboard")]
+    Dashboard { patient_id: String },
 
     #[route("/:patient_id/search/")]
     Information { patient_id: String },

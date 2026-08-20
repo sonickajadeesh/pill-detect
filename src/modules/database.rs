@@ -56,6 +56,15 @@ pub fn get_patients() -> Result<Vec<Patient>, String> {
     }
 }
 
+pub fn get_patient_id(patient_id: &str) -> Result<Patient, String> {
+    let patients = get_patients()?;
+
+    patients
+        .into_iter()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())
+}
+
 // Patient Ops
 pub fn add_patient(mut patient: Patient) -> Result<(), String> {
     let mut patients = get_patients()?;
