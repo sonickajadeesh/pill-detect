@@ -3,6 +3,4 @@ pub mod dashboard;
 pub mod footer;
 pub mod homepage;
 pub mod navbar;
-pub mod patients;
-pub mod registeration;
 pub mod search;
