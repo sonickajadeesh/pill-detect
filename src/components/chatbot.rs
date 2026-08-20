@@ -1,10 +1,12 @@
 use dioxus::prelude::*;
 
-use crate::components::navbar::Navbar;
-use crate::modules::{
-    database::{Chat, Message, MessageRole, add_chat, delete_chat, get_chats, update_chat},
-    prompts::guidance,
-    utilities::markdown_to_html,
+use crate::{
+    components::navbar::Navbar,
+    modules::{
+        database::{Chat, Message, MessageRole, add_chat, delete_chat, get_chats, update_chat},
+        prompts::guidance,
+        utilities::markdown_to_html,
+    },
 };
 
 #[component]

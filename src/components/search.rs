@@ -1,9 +1,11 @@
 use dioxus::prelude::*;
 
-use crate::components::navbar::Navbar;
-use crate::modules::{
-    database::{SearchHistory, add_search_history, clear_search_history, get_search_history},
-    prompts::{MedicineInformation, identify_medicine, research_medicine},
+use crate::{
+    components::navbar::Navbar,
+    modules::{
+        database::{SearchHistory, add_search_history, clear_search_history, get_search_history},
+        prompts::{MedicineInformation, identify_medicine, research_medicine},
+    },
 };
 
 #[component]
@@ -38,15 +40,11 @@ pub fn Information(patient_id: String) -> Element {
     let clear_patient_id = patient_id.clone();
 
     rsx! {
-        Navbar {
-            patient_id: patient_id.clone(),
-        }
+        Navbar { patient_id: patient_id.clone() }
 
         main { class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
 
-            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
-                "Search 🔎"
-            }
+            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Search 🔎" }
 
             p { class: "mt-2 mb-8 text-base text-slate-500",
                 "Search for a medicine to learn more about it."

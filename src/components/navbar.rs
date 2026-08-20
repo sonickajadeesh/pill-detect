@@ -1,14 +1,13 @@
-use crate::Route;
 use dioxus::prelude::*;
+
+use crate::Route;
 
 #[component]
 pub fn Navbar(patient_id: String) -> Element {
     rsx! {
-        nav {
-            class: "flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4",
+        nav { class: "flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4",
 
-            div {
-                class: "flex items-center gap-2",
+            div { class: "flex items-center gap-2",
 
                 Link {
                     to: Route::Homepage {},
@@ -17,8 +16,7 @@ pub fn Navbar(patient_id: String) -> Element {
                 }
             }
 
-            div {
-                class: "flex items-center gap-1 rounded-lg bg-slate-100 p-1",
+            div { class: "flex items-center gap-1 rounded-lg bg-slate-100 p-1",
 
                 Link {
                     to: Route::Information {
