@@ -76,8 +76,16 @@ pub fn validate(
         return Some("Please enter the patient's height.".to_string());
     }
 
+    if height.parse::<f32>().unwrap_or(0.0) <= 0.0 {
+        return Some("Height must be greater than zero.".to_string());
+    }
+
     if weight.trim().is_empty() {
         return Some("Please enter the patient's weight.".to_string());
+    }
+
+    if weight.parse::<f32>().unwrap_or(0.0) <= 0.0 {
+        return Some("Weight must be greater than zero.".to_string());
     }
 
     None
