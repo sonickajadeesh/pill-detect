@@ -16,7 +16,7 @@ pub fn Homepage() -> Element {
     let navigator = use_navigator();
 
     rsx! {
-        main { class: "flex min-h-[90vh] flex-col items-center justify-center px-5 py-10 text-center",
+        main { class: "flex min-h-[96vh] flex-col items-center justify-center px-5 py-10 text-center",
 
             h1 { class: "m-0 text-[44px] font-bold tracking-[-2px] text-gray-800 sm:text-[64px]",
                 "🩺 Pill Detect"
