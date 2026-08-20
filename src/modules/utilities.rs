@@ -44,8 +44,16 @@ pub fn validate(
         return Some("Please enter the patient's first name.".to_string());
     }
 
+    if !first_name.chars().all(char::is_alphabetic) {
+        return Some("First name can only contain letters.".to_string());
+    }
+
     if last_name.trim().is_empty() {
         return Some("Please enter the patient's last name.".to_string());
+    }
+
+    if !last_name.chars().all(char::is_alphabetic) {
+        return Some("Last name can only contain letters.".to_string());
     }
 
     if sex.is_empty() {
