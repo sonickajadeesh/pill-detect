@@ -1,7 +1,7 @@
 use gloo_storage::{LocalStorage, Storage};
 use serde::{Deserialize, Serialize};
 
-const PATIENTS_KEY: &str = "PATIENTS";
+const DB: &str = "PATIENTS";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Patient {
@@ -20,7 +20,7 @@ pub struct Patient {
     pub search_history: Vec<SearchHistory>,
 
     #[serde(default)]
-    pub chats: Vec<Chat>,
+    pub chat_history: Vec<Chat>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -49,7 +49,7 @@ pub struct Chat {
 }
 
 pub fn get_patients() -> Result<Vec<Patient>, String> {
-    match LocalStorage::get(PATIENTS_KEY) {
+    match LocalStorage::get(DB) {
         Ok(patients) => Ok(patients),
         Err(gloo_storage::errors::StorageError::KeyNotFound(_)) => Ok(Vec::new()),
         Err(err) => Err(format!("Failed to load patients: {:?}", err)),
@@ -71,12 +71,11 @@ pub fn add_patient(mut patient: Patient) -> Result<(), String> {
 
     // New patients always start with empty history.
     patient.search_history = Vec::new();
-    patient.chats = Vec::new();
+    patient.chat_history = Vec::new();
 
     patients.push(patient);
 
-    LocalStorage::set(PATIENTS_KEY, patients)
-        .map_err(|err| format!("Failed to save patient: {:?}", err))
+    LocalStorage::set(DB, patients).map_err(|err| format!("Failed to save patient: {:?}", err))
 }
 
 pub fn update_patient(mut updated_patient: Patient) -> Result<(), String> {
@@ -90,12 +89,11 @@ pub fn update_patient(mut updated_patient: Patient) -> Result<(), String> {
     };
 
     updated_patient.search_history = patient.search_history.clone();
-    updated_patient.chats = patient.chats.clone();
+    updated_patient.chat_history = patient.chat_history.clone();
 
     *patient = updated_patient;
 
-    LocalStorage::set(PATIENTS_KEY, patients)
-        .map_err(|err| format!("Failed to update patient: {:?}", err))
+    LocalStorage::set(DB, patients).map_err(|err| format!("Failed to update patient: {:?}", err))
 }
 
 pub fn delete_patient(patient_id: &str) -> Result<(), String> {
@@ -109,8 +107,7 @@ pub fn delete_patient(patient_id: &str) -> Result<(), String> {
         return Err("Patient not found.".to_string());
     }
 
-    LocalStorage::set(PATIENTS_KEY, patients)
-        .map_err(|err| format!("Failed to delete patient: {:?}", err))
+    LocalStorage::set(DB, patients).map_err(|err| format!("Failed to delete patient: {:?}", err))
 }
 
 // Search Ops
@@ -135,7 +132,7 @@ pub fn add_search_history(patient_id: &str, search: SearchHistory) -> Result<(),
 
     patient.search_history.push(search);
 
-    LocalStorage::set(PATIENTS_KEY, patients)
+    LocalStorage::set(DB, patients)
         .map_err(|err| format!("Failed to save search history: {:?}", err))
 }
 
@@ -149,7 +146,7 @@ pub fn clear_search_history(patient_id: &str) -> Result<(), String> {
 
     patient.search_history.clear();
 
-    LocalStorage::set(PATIENTS_KEY, patients)
+    LocalStorage::set(DB, patients)
         .map_err(|err| format!("Failed to clear search history: {:?}", err))
 }
 
@@ -162,7 +159,7 @@ pub fn get_chats(patient_id: &str) -> Result<Vec<Chat>, String> {
         .find(|patient| patient.id == patient_id)
         .ok_or_else(|| "Patient not found.".to_string())?;
 
-    Ok(patient.chats.clone())
+    Ok(patient.chat_history.clone())
 }
 
 pub fn add_chat(patient_id: &str, chat: Chat) -> Result<(), String> {
@@ -173,10 +170,9 @@ pub fn add_chat(patient_id: &str, chat: Chat) -> Result<(), String> {
         .find(|patient| patient.id == patient_id)
         .ok_or_else(|| "Patient not found.".to_string())?;
 
-    patient.chats.push(chat);
+    patient.chat_history.push(chat);
 
-    LocalStorage::set(PATIENTS_KEY, patients)
-        .map_err(|err| format!("Failed to save chat: {:?}", err))
+    LocalStorage::set(DB, patients).map_err(|err| format!("Failed to save chat: {:?}", err))
 }
 
 pub fn update_chat(patient_id: &str, updated_chat: Chat) -> Result<(), String> {
@@ -188,15 +184,14 @@ pub fn update_chat(patient_id: &str, updated_chat: Chat) -> Result<(), String> {
         .ok_or_else(|| "Patient not found.".to_string())?;
 
     let chat = patient
-        .chats
+        .chat_history
         .iter_mut()
         .find(|chat| chat.id == updated_chat.id)
         .ok_or_else(|| "Chat not found.".to_string())?;
 
     *chat = updated_chat;
 
-    LocalStorage::set(PATIENTS_KEY, patients)
-        .map_err(|err| format!("Failed to update chat: {:?}", err))
+    LocalStorage::set(DB, patients).map_err(|err| format!("Failed to update chat: {:?}", err))
 }
 
 pub fn delete_chat(patient_id: &str, chat_id: u64) -> Result<(), String> {
@@ -207,14 +202,13 @@ pub fn delete_chat(patient_id: &str, chat_id: u64) -> Result<(), String> {
         .find(|patient| patient.id == patient_id)
         .ok_or_else(|| "Patient not found.".to_string())?;
 
-    let original_len = patient.chats.len();
+    let original_len = patient.chat_history.len();
 
-    patient.chats.retain(|chat| chat.id != chat_id);
+    patient.chat_history.retain(|chat| chat.id != chat_id);
 
-    if patient.chats.len() == original_len {
+    if patient.chat_history.len() == original_len {
         return Err("Chat not found.".to_string());
     }
 
-    LocalStorage::set(PATIENTS_KEY, patients)
-        .map_err(|err| format!("Failed to delete chat: {:?}", err))
+    LocalStorage::set(DB, patients).map_err(|err| format!("Failed to delete chat: {:?}", err))
 }
