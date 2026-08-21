@@ -44,7 +44,7 @@ pub fn Information(patient_id: String) -> Element {
 
         main { class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
 
-            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Search 🔎" }
+            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Medicine Information 🔎" }
 
             p { class: "mt-2 mb-8 text-base text-slate-500",
                 "Search for a medicine to learn more about it."

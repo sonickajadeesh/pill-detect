@@ -260,7 +260,7 @@ pub fn Guidance(patient_id: String) -> Element {
                 header { class: "mb-6 flex-shrink-0",
 
                     h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
-                        "Guidance 💬"
+                        "Symptom Guidance 💬"
                     }
 
                     p { class: "mt-2 text-base text-slate-500",
