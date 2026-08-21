@@ -181,12 +181,6 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                 }
             }
 
-            if let Some(error) = error_message() {
-                div { class: "mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700",
-                    "{error}"
-                }
-            }
-
             if prescriptions().is_empty() {
                 div { class: "rounded-xl border border-dashed border-gray-300 px-6 py-12 text-center",
 
@@ -370,7 +364,8 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
                     div { class: "w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl",
 
-                        div { class: "mb-6 flex items-center justify-between",
+                        // Header
+                        div { class: "flex items-center justify-between",
 
                             h2 { class: "text-lg font-semibold text-gray-900",
 
@@ -382,13 +377,14 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                             }
 
                             button {
-                                class: "text-gray-400 hover:text-gray-700",
+                                class: "rounded-md p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700",
                                 onclick: move |_| close_form(),
                                 "✕"
                             }
                         }
 
-                        div { class: "space-y-5",
+                        // Form
+                        div { class: "mt-6 space-y-5",
 
                             div {
                                 label { class: "mb-2 block text-sm font-medium text-gray-700",
@@ -396,7 +392,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                 }
 
                                 input {
-                                    class: "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-black",
+                                    class: "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
                                     r#type: "text",
                                     placeholder: "e.g. Respiratory infection",
                                     value: "{reason}",
@@ -412,7 +408,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                 }
 
                                 textarea {
-                                    class: "min-h-32 w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-black",
+                                    class: "min-h-32 w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
                                     placeholder: "e.g. Amoxicillin 3x day for 5 days",
                                     value: "{prescription_text}",
                                     oninput: move |event| {
@@ -427,7 +423,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                 }
 
                                 input {
-                                    class: "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-black",
+                                    class: "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
                                     r#type: "date",
                                     value: "{expiry_date}",
                                     oninput: move |event| {
@@ -437,20 +433,21 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                             }
                         }
 
-                        div { class: "mt-6 flex justify-end gap-3",
+                        // Error + action
+                        div { class: "mt-6",
 
-                            button {
-                                class: "rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50",
-                                onclick: move |_| close_form(),
-                                "Cancel"
+                            if let Some(error) = error_message() {
+                                div { class: "mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700",
+                                    "{error}"
+                                }
                             }
 
                             button {
-                                class: "rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700",
+                                class: "w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700",
                                 onclick: save_prescription,
 
                                 if editing_id().is_some() {
-                                    "Save Changes"
+                                    "Update Prescription"
                                 } else {
                                     "Add Prescription"
                                 }
