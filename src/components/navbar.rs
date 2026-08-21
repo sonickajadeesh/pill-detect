@@ -16,8 +16,7 @@ pub fn Navbar(patient_id: String) -> Element {
                 },
                 class: "flex items-center gap-1 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900",
 
-                "← "
-                " Back"
+                "← Back"
             }
 
             // Centered header
@@ -44,7 +43,7 @@ pub fn Navbar(patient_id: String) -> Element {
                 }
 
                 if show_menu() {
-                    div { class: "absolute right-0 top-11 z-50 w-50 rounded-lg border border-slate-200 bg-white p-1 shadow-lg",
+                    div { class: "absolute right-0 top-11 z-50 w-52 rounded-lg border border-slate-200 bg-white p-1 shadow-lg",
 
                         Link {
                             to: Route::Information {
@@ -53,6 +52,15 @@ pub fn Navbar(patient_id: String) -> Element {
                             class: "block rounded-md px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
 
                             "Medicine Details 🔎"
+                        }
+
+                        Link {
+                            to: Route::PrescriptionAnalysis {
+                                patient_id: patient_id.clone(),
+                            },
+                            class: "block rounded-md px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+
+                            "Prescription Analysis 📋"
                         }
 
                         Link {
