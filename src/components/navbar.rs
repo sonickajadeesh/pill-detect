@@ -43,7 +43,18 @@ pub fn Navbar(patient_id: String) -> Element {
                 }
 
                 if show_menu() {
-                    div { class: "absolute right-0 top-11 z-50 w-52 rounded-lg border border-slate-200 bg-white p-1 shadow-lg",
+                    // Click-away backdrop
+                    div {
+                        class: "fixed inset-0 z-40",
+
+                        onclick: move |_| show_menu.set(false),
+                    }
+
+                    // Menu
+                    div {
+                        class: "absolute right-0 top-11 z-50 w-52 rounded-lg border border-slate-200 bg-white p-1 shadow-lg",
+
+                        onclick: move |event| event.stop_propagation(),
 
                         Link {
                             to: Route::Information {
