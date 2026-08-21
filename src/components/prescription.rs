@@ -191,12 +191,6 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                 div { class: "rounded-xl border border-dashed border-gray-300 px-6 py-12 text-center",
 
                     p { class: "text-sm text-gray-500", "No prescriptions have been added." }
-
-                    button {
-                        class: "mt-3 text-sm font-medium text-gray-900 underline",
-                        onclick: move |_| open_add_form(),
-                        "Add the first prescription"
-                    }
                 }
             } else {
                 div { class: "space-y-8",
