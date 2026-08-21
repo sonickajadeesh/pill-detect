@@ -169,7 +169,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
             div { class: "mb-6 flex items-center justify-between",
 
                 div {
-                    h1 { class: "text-2xl font-semibold text-gray-900", "Prescriptions" }
+                    h1 { class: "text-2xl font-semibold text-gray-900", "Prescription Analysis 📋" }
 
                     p { class: "mt-1 text-sm text-gray-500", "View and manage patient prescriptions." }
                 }
