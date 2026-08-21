@@ -172,7 +172,7 @@ pub fn Guidance(patient_id: String) -> Element {
         main { class: "flex h-[90vh] overflow-hidden bg-slate-50 p-6",
 
             // Sidebar
-            aside { class: if sidebar_open() { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 shadow-[4px_0_20px_rgb(0_0_0_/_10%)] transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:rounded-[14px] sm:p-3 sm:shadow-none" } else { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 -translate-x-full flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:translate-x-0 sm:rounded-[14px] sm:p-3" },
+            aside { class: if sidebar_open() { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:rounded-[14px] sm:p-3 sm:shadow-none" } else { "fixed inset-y-0 left-0 z-[100] flex w-[280px] flex-shrink-0 -translate-x-full flex-col rounded-r-[14px] border border-slate-200 bg-white p-4 transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-60 sm:translate-x-0 sm:rounded-[14px] sm:p-3" },
 
                 button {
                     class: "w-full rounded-[10px] bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700",
@@ -352,7 +352,7 @@ pub fn Guidance(patient_id: String) -> Element {
                             if loading() {
                                 "..."
                             } else {
-                                "Send"
+                                "Send ⮞"
                             }
                         }
                     }
