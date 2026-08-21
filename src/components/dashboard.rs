@@ -49,7 +49,7 @@ pub fn Dashboard(patient_id: String) -> Element {
                 "🩺 Pill Detect"
             }
 
-            p { class: "mb-7 mt-2 max-w-xl text-sm text-gray-500 sm:mb-9 sm:text-base md:text-lg",
+            p { class: "mb-7 mt-2 text-sm text-gray-500 sm:mb-9 sm:whitespace-nowrap sm:text-base md:text-lg",
                 "Prescription Analysis • Medicine Details • Symptom Guidance • Drug Interaction"
             }
 
