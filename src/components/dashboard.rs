@@ -70,6 +70,17 @@ pub fn Dashboard(patient_id: String) -> Element {
                         class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
                         r#type: "button",
 
+                        onclick: {
+                            let patient_id = patient_id.clone();
+
+                            move |_| {
+                                navigator
+                                    .push(Route::PrescriptionAnalysis {
+                                        patient_id: patient_id.clone(),
+                                    });
+                            }
+                        },
+
                         "📋"
 
                         div { class: "mt-2 text-sm font-semibold text-gray-800 sm:text-base",

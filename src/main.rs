@@ -1,11 +1,12 @@
 mod components;
 mod modules;
 
-use components::{
-    chatbot::Guidance, dashboard::Dashboard, footer::Footer, homepage::Homepage,
-    search::Information,
-};
 use dioxus::prelude::*;
+
+use components::{
+    dashboard::Dashboard, footer::Footer, guidance::Guidance, homepage::Homepage,
+    information::Information, prescription::PrescriptionAnalysis,
+};
 
 #[derive(Routable, Clone, PartialEq)]
 pub enum Route {
@@ -15,11 +16,14 @@ pub enum Route {
     #[route("/:patient_id/")]
     Dashboard { patient_id: String },
 
-    #[route("/:patient_id/search/")]
-    Information { patient_id: String },
-
     #[route("/:patient_id/guidance")]
     Guidance { patient_id: String },
+
+    #[route("/:patient_id/information/")]
+    Information { patient_id: String },
+
+    #[route("/:patient_id/prescriptions/")]
+    PrescriptionAnalysis { patient_id: String },
 }
 
 fn main() {

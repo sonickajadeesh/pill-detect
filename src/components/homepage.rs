@@ -126,6 +126,11 @@ pub fn Homepage() -> Element {
                 .as_ref()
                 .map(|patient| patient.chat_history.clone())
                 .unwrap_or_default(),
+
+            prescriptions: editing_patient()
+                .as_ref()
+                .map(|patient| patient.prescriptions.clone())
+                .unwrap_or_default(),
         };
 
         if editing_patient().is_some() {
