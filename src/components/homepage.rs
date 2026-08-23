@@ -117,19 +117,24 @@ pub fn Homepage() -> Element {
             allergies: allergies().trim().to_string(),
             medical_conditions: medical_conditions().trim().to_string(),
 
-            search_history: editing_patient()
-                .as_ref()
-                .map(|patient| patient.search_history.clone())
-                .unwrap_or_default(),
-
             chat_history: editing_patient()
                 .as_ref()
                 .map(|patient| patient.chat_history.clone())
                 .unwrap_or_default(),
 
+            interaction_history: editing_patient()
+                .as_ref()
+                .map(|patient| patient.interaction_history.clone())
+                .unwrap_or_default(),
+
             prescriptions: editing_patient()
                 .as_ref()
                 .map(|patient| patient.prescriptions.clone())
+                .unwrap_or_default(),
+
+            search_history: editing_patient()
+                .as_ref()
+                .map(|patient| patient.search_history.clone())
                 .unwrap_or_default(),
         };
 

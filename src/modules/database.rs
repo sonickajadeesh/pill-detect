@@ -24,6 +24,9 @@ pub struct Patient {
 
     #[serde(default)]
     pub prescriptions: Vec<Prescription>,
+
+    #[serde(default)]
+    pub interaction_history: Vec<InteractionHistory>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -60,6 +63,11 @@ pub struct Prescription {
     pub expiry_date: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct InteractionHistory {
+    pub medicines: Vec<String>,
+}
+
 // Patient CRUD
 pub fn add_patient(mut patient: Patient) -> Result<(), String> {
     let mut patients = get_patients()?;
@@ -68,6 +76,7 @@ pub fn add_patient(mut patient: Patient) -> Result<(), String> {
     patient.search_history = Vec::new();
     patient.chat_history = Vec::new();
     patient.prescriptions = Vec::new();
+    patient.interaction_history = Vec::new();
 
     patients.push(patient);
 
@@ -104,6 +113,7 @@ pub fn update_patient(mut updated_patient: Patient) -> Result<(), String> {
     updated_patient.search_history = patient.search_history.clone();
     updated_patient.chat_history = patient.chat_history.clone();
     updated_patient.prescriptions = patient.prescriptions.clone();
+    updated_patient.interaction_history = patient.interaction_history.clone();
 
     *patient = updated_patient;
 
@@ -295,4 +305,53 @@ pub fn delete_prescription(patient_id: &str, prescription_id: &str) -> Result<()
 
     LocalStorage::set(DB, patients)
         .map_err(|err| format!("Failed to delete prescription: {:?}", err))
+}
+
+// Drug Interaction History CRUD
+pub fn add_interaction_history(patient_id: &str, medicines: Vec<String>) -> Result<(), String> {
+    let mut patients = get_patients()?;
+
+    let patient = patients
+        .iter_mut()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())?;
+
+    let already_exists = patient
+        .interaction_history
+        .iter()
+        .any(|history| history.medicines == medicines);
+
+    if !already_exists {
+        patient
+            .interaction_history
+            .push(InteractionHistory { medicines });
+    }
+
+    LocalStorage::set(DB, patients)
+        .map_err(|err| format!("Failed to save interaction history: {:?}", err))
+}
+
+pub fn get_interaction_history(patient_id: &str) -> Result<Vec<InteractionHistory>, String> {
+    let patients = get_patients()?;
+
+    let patient = patients
+        .iter()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())?;
+
+    Ok(patient.interaction_history.clone())
+}
+
+pub fn clear_interaction_history(patient_id: &str) -> Result<(), String> {
+    let mut patients = get_patients()?;
+
+    let patient = patients
+        .iter_mut()
+        .find(|patient| patient.id == patient_id)
+        .ok_or_else(|| "Patient not found.".to_string())?;
+
+    patient.interaction_history.clear();
+
+    LocalStorage::set(DB, patients)
+        .map_err(|err| format!("Failed to clear interaction history: {:?}", err))
 }
