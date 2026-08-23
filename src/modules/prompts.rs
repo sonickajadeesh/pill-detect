@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::modules::api::prompt_ai;
+use crate::modules::api::{prompt_ai, prompt_image};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct MedicineIdentification {
@@ -18,13 +18,29 @@ pub struct MedicineInformation {
     pub prescription: bool,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct PrescriptionAnalysis {
+    pub medications: Vec<PrescriptionMedication>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PrescriptionMedication {
+    pub name: String,
+    pub strength: String,
+    pub dosage: String,
+    pub duration: String,
+    pub instructions: String,
+}
+
 pub async fn identify_medicine(
     term: &str,
 ) -> Result<MedicineIdentification, Box<dyn std::error::Error>> {
     let prompt = format!(
-        r#"Use web search and identify medicine: "{}".
-        Determine product name and generic name.
-        If not confident, return false. Return JSON only: {{"found":true | false,"product":"","generic":""}}"#,
+        r#"
+Use web search and identify medicine: "{}".
+Determine product name and generic name.
+If not confident, return false. Return JSON only: {{"found":true | false,"product":"","generic":""}}
+        "#,
         term
     );
     let response = prompt_ai(&prompt).await?;
@@ -37,11 +53,14 @@ pub async fn research_medicine(
     generic: &str,
 ) -> Result<MedicineInformation, Box<dyn std::error::Error>> {
     let prompt = format!(
-        r#"Determine uses, typical dosage, common side effects, warnings and prescription requirement in India of this medicine: {}.
-        Do not guess. Use web search and reliable sources.
-        Return JSON only: {{"uses":"","dosage":"","side_effects":"","warnings":"","prescription": true | false}}"#,
+        r#"
+Determine uses, typical dosage, common side effects, warnings and prescription requirement in India of this medicine: {}.
+Do not guess. Use web search and reliable sources.
+Return JSON only: {{"uses":"","dosage":"","side_effects":"","warnings":"","prescription": true | false}}
+    "#,
         generic
     );
+
     let response = prompt_ai(&prompt).await?;
     let information: MedicineInformation = serde_json::from_str(&response)?;
 
@@ -50,16 +69,48 @@ pub async fn research_medicine(
 
 pub async fn guidance(conversation: &str) -> Result<String, Box<dyn std::error::Error>> {
     let prompt = format!(
-        r#"Converse naturally, using prior context for follow-ups.
-        Be concise, clear, and medically responsible.
-        Do not diagnose or overstate uncertain information.
-        Do not invent medical information.
+        r#"
+Converse naturally, using prior context for follow-ups.
+Be concise, clear, and medically responsible.
+Do not diagnose or overstate uncertain information.
+Do not invent medical information.
 
-        Conversation: {conversation}
+Conversation: {conversation}
 
-        Respond to the latest user message."#
+Respond to the latest user message.
+    "#
     );
+
     let response = prompt_ai(&prompt).await?;
 
     Ok(response)
+}
+
+pub async fn analyze_prescription(
+    image_bytes: &[u8],
+    mime_type: &str,
+) -> Result<PrescriptionAnalysis, Box<dyn std::error::Error>> {
+    let prompt = r#"
+Analyze this prescription image and extract every medication prescribed.
+Do not invent information. If a field cannot be read, return an empty string.
+Keep dosage instructions exactly as written, including multiple dosing times.
+Do not include total quantity in dosage.
+Return JSON only:
+{
+    "medications": [
+        {
+            "name": "",
+            "strength": "",
+            "dosage": "",
+            "duration": "",
+            "instructions": ""
+        }
+    ]
+}
+    "#;
+
+    let response = prompt_image(image_bytes, mime_type, prompt).await?;
+    let analysis: PrescriptionAnalysis = serde_json::from_str(&response)?;
+
+    Ok(analysis)
 }

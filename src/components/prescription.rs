@@ -1,5 +1,6 @@
 use chrono::Local;
 use dioxus::prelude::*;
+use dioxus_html::FileData;
 
 use crate::{
     components::navbar::Navbar,
@@ -8,7 +9,8 @@ use crate::{
             Prescription, add_prescription, delete_prescription, get_prescriptions,
             update_prescription,
         },
-        utilities::format_date,
+        prompts::analyze_prescription,
+        utilities::{format_date, format_prescription, read_file_bytes},
     },
 };
 
@@ -22,6 +24,9 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
     let mut prescription_text = use_signal(String::new);
     let mut expiry_date = use_signal(String::new);
     let mut error_message = use_signal(|| None::<String>);
+
+    let mut selected_file = use_signal(|| None::<FileData>);
+    let mut analyzing = use_signal(|| false);
 
     let patient_id_for_load = patient_id.clone();
 
@@ -166,16 +171,15 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
         main { class: "min-h-[90vh] max-w-[900px] mx-auto px-5 py-8",
 
-            div { class: "mb-6 flex items-center justify-between",
+            div { class: "mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
 
                 div {
                     h1 { class: "text-2xl font-semibold text-gray-900", "Prescription Analysis 📋" }
-
                     p { class: "mt-1 text-sm text-gray-500", "View and manage patient prescriptions." }
                 }
 
                 button {
-                    class: "rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700",
+                    class: "w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 sm:w-auto",
                     onclick: move |_| open_add_form(),
                     "+ Add Prescription"
                 }
@@ -183,7 +187,6 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
             if prescriptions().is_empty() {
                 div { class: "rounded-xl border border-dashed border-gray-300 px-6 py-12 text-center",
-
                     p { class: "text-sm text-gray-500", "No prescriptions have been added." }
                 }
             } else {
@@ -402,19 +405,83 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                 }
                             }
 
-                            div {
-                                label { class: "mb-2 block text-sm font-medium text-gray-700",
-                                    "Prescription"
-                                }
+                            div { class: "flex items-center justify-between",
 
-                                textarea {
-                                    class: "min-h-32 w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
-                                    placeholder: "e.g. Amoxicillin 3x day for 5 days",
-                                    value: "{prescription_text}",
-                                    oninput: move |event| {
-                                        prescription_text.set(event.value());
+                                label { class: "text-sm font-medium text-gray-700", "Prescription" }
+
+                                input {
+                                    id: "prescription-upload",
+                                    class: "hidden",
+                                    r#type: "file",
+                                    accept: "image/*",
+
+                                    onchange: move |event| {
+                                        if let Some(file) = event.files().first() {
+                                            let file = file.clone();
+
+                                            let mime_type = match file.name().rsplit('.').next() {
+                                                Some("png") | Some("PNG") => "image/png",
+                                                Some("webp") | Some("WEBP") => "image/webp",
+                                                Some("jpg") | Some("JPG") |
+                                                Some("jpeg") | Some("JPEG") => "image/jpeg",
+                                                _ => "image/jpeg",
+                                            };
+
+                                            selected_file.set(Some(file.clone()));
+                                            analyzing.set(true);
+                                            error_message.set(None);
+
+                                            spawn(async move {
+                                                let result = match read_file_bytes(&file).await {
+                                                    Ok(bytes) => analyze_prescription(&bytes, &mime_type).await,
+                                                    Err(err) => Err(err.into()),
+                                                };
+
+                                                match result {
+                                                    Ok(analysis) => {
+                                                        let formatted = format_prescription(&analysis);
+                                                        prescription_text.set(formatted);
+                                                    }
+
+                                                    Err(err) => {
+                                                        error_message
+                                                            .set(
+                                                                Some(format!("Failed to analyze prescription: {}", err)),
+                                                            );
+                                                    }
+                                                }
+                                                analyzing.set(false);
+                                            });
+                                        }
                                     },
                                 }
+
+                                button {
+                                    class: "rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60",
+                                    r#type: "button",
+                                    disabled: analyzing(),
+
+                                    onclick: move |_| {
+                                        if !analyzing() {
+                                            document::eval(r#"document.getElementById("prescription-upload").click();"#);
+                                        }
+                                    },
+
+                                    if analyzing() {
+                                        "Analyzing..."
+                                    } else {
+                                        "Upload"
+                                    }
+                                }
+                            }
+
+                            textarea {
+                                class: "min-h-32 w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+                                placeholder: "e.g. Amoxicillin 3x day for 5 days",
+                                value: "{prescription_text}",
+                                oninput: move |event| {
+                                    prescription_text.set(event.value());
+                                },
                             }
 
                             div {

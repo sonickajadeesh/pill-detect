@@ -1,5 +1,8 @@
 use chrono::{DateTime, Datelike, Local, NaiveDate};
+use dioxus_html::FileData;
 use pulldown_cmark::{Parser, html};
+
+use crate::modules::prompts::PrescriptionAnalysis;
 
 pub fn sentence_case(value: &str) -> String {
     let mut chars = value.trim().chars();
@@ -110,4 +113,52 @@ pub fn format_date(date: &str) -> String {
     }
 
     date.to_string()
+}
+
+pub async fn read_file_bytes(file: &FileData) -> Result<Vec<u8>, String> {
+    file.read_bytes()
+        .await
+        .map(|bytes| bytes.to_vec())
+        .map_err(|err| format!("Failed to read file: {:?}", err))
+}
+
+pub fn format_prescription(analysis: &PrescriptionAnalysis) -> String {
+    analysis
+        .medications
+        .iter()
+        .map(|medication| {
+            let mut lines = Vec::new();
+
+            if !medication.name.trim().is_empty() {
+                lines.push(medication.name.trim().to_string());
+            }
+
+            if !medication.strength.trim().is_empty() {
+                lines.push(medication.strength.trim().to_string());
+            }
+
+            let dosage = match (medication.dosage.trim(), medication.duration.trim()) {
+                (dosage, duration) if !dosage.is_empty() && !duration.is_empty() => {
+                    format!("{dosage} · {duration}")
+                }
+
+                (dosage, _) if !dosage.is_empty() => dosage.to_string(),
+
+                (_, duration) if !duration.is_empty() => duration.to_string(),
+
+                _ => String::new(),
+            };
+
+            if !dosage.is_empty() {
+                lines.push(dosage);
+            }
+
+            if !medication.instructions.trim().is_empty() {
+                lines.push(medication.instructions.trim().to_string());
+            }
+
+            lines.join("\n")
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n")
 }
