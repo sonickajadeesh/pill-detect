@@ -11,13 +11,20 @@ use crate::{
 #[component]
 pub fn Information(patient_id: String) -> Element {
     let mut search_term = use_signal(String::new);
-    let mut loading = use_signal(|| false);
+
+    // Separate loading states for the two different operations.
+    let mut searching = use_signal(|| false);
+    let mut researching = use_signal(|| false);
+
     let mut error = use_signal(|| Option::<String>::None);
 
     let mut medicine = use_signal(|| Option::<(String, String)>::None);
     let mut information = use_signal(|| Option::<MedicineInformation>::None);
 
     let mut history = use_signal(Vec::<SearchHistory>::new);
+
+    // Tracks whether the current medicine was selected from search history.
+    let mut from_history = use_signal(|| false);
 
     // Clone the patient ID for the history-loading effect.
     let history_patient_id = patient_id.clone();
@@ -42,9 +49,11 @@ pub fn Information(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        main { class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
+        main { class: "mx-auto min-h-[90vh] max-w-[900px] px-6 py-12",
 
-            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Medicine Information 🔎" }
+            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
+                "Medicine Information 🔎"
+            }
 
             p { class: "mt-2 mb-8 text-base text-slate-500",
                 "Search for a medicine to learn more about it."
@@ -65,15 +74,16 @@ pub fn Information(patient_id: String) -> Element {
                             return;
                         }
 
-                        loading.set(true);
+                        searching.set(true);
                         error.set(None);
                         medicine.set(None);
                         information.set(None);
+                        from_history.set(false);
 
                         spawn(async move {
                             match identify_medicine(&term).await {
                                 Ok(result) => {
-                                    loading.set(false);
+                                    searching.set(false);
 
                                     if result.found {
                                         medicine.set(Some((result.product, result.generic)));
@@ -88,7 +98,7 @@ pub fn Information(patient_id: String) -> Element {
                                     }
                                 }
                                 Err(err) => {
-                                    loading.set(false);
+                                    searching.set(false);
                                     error.set(Some(err.to_string()));
                                 }
                             }
@@ -104,6 +114,7 @@ pub fn Information(patient_id: String) -> Element {
 
                         oninput: move |event| {
                             search_term.set(event.value());
+                            from_history.set(false);
                         },
                     }
 
@@ -111,10 +122,10 @@ pub fn Information(patient_id: String) -> Element {
                         class: "rounded-[10px] bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60",
 
                         r#type: "submit",
-                        disabled: loading(),
+                        disabled: searching(),
 
-                        if loading() {
-                            "Searching..."
+                        if searching() {
+                            div { class: "h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" }
                         } else {
                             "🔍︎"
                         }
@@ -131,48 +142,101 @@ pub fn Information(patient_id: String) -> Element {
 
             // Search result
             if let Some((product, generic)) = medicine() {
-                section { class: "mt-6 rounded-[14px] border border-slate-200 bg-white p-7 text-slate-700 leading-relaxed",
+                section { class: "mt-6 rounded-[14px] border border-slate-200 bg-white p-5 sm:p-7",
 
+                    // Research result
                     if let Some(info) = information() {
-                        h2 { class: "m-0 text-[21px] font-semibold text-slate-900",
-                            "{generic}"
-                        }
+                        // Medicine heading
+                        div { class: "flex items-start justify-between gap-3 border-b border-slate-100 pb-4",
 
-                        p { class: "mt-3.5", "Uses: {info.uses}" }
+                            div {
+                                h2 { class: "mt-1 text-[22px] font-semibold text-slate-900",
+                                    "{generic}"
+                                }
 
-                        p { class: "mt-3.5", "Dosage: {info.dosage}" }
-
-                        p { class: "mt-3.5", "Side effects: {info.side_effects}" }
-
-                        p { class: "mt-3.5", "Warnings: {info.warnings}" }
-
-                        p { class: "mt-3.5",
-
-                            "Prescription required: "
+                                p { class: "mt-1 text-sm text-slate-500", "{product}" }
+                            }
 
                             if info.prescription {
-                                "Yes"
+                                span { class: "mt-2 shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700",
+                                    "Prescription Required"
+                                }
                             } else {
-                                "No"
+                                span { class: "mt-2 shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700",
+                                    "No Prescription"
+                                }
                             }
                         }
+
+                        div { class: "mt-5 space-y-3",
+
+                            // Uses
+                            div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
+
+                                p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
+                                    "Uses"
+                                }
+
+                                p { class: "mt-1.5 text-sm leading-6 text-slate-700",
+                                    "{info.uses}"
+                                }
+                            }
+
+                            // Dosage
+                            div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
+
+                                p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
+                                    "Dosage"
+                                }
+
+                                p { class: "mt-1.5 text-sm leading-6 text-slate-700",
+                                    "{info.dosage}"
+                                }
+                            }
+
+                            // Side effects
+                            div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
+
+                                p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
+                                    "Side Effects"
+                                }
+
+                                p { class: "mt-1.5 text-sm leading-6 text-slate-700",
+                                    "{info.side_effects}"
+                                }
+                            }
+
+                            // Warnings
+                            div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
+
+                                p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
+                                    "Warnings"
+                                }
+
+                                p { class: "mt-1.5 text-sm leading-6 text-slate-700",
+                                    "{info.warnings}"
+                                }
+                            }
+                        }
+                    } else if from_history() {
+                        p { class: "py-6 text-sm text-slate-500", "Loading..." }
                     } else {
-                        h2 { class: "m-0 text-[21px] font-semibold text-slate-900",
+                        h2 { class: "mt-0 text-md text-slate-900",
                             "Is this the medicine you're looking for?"
                         }
 
                         div { class: "mt-4 rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-3",
 
-                            div { class: "font-medium text-slate-900", "{product}" }
+                            div { class: "font-medium text-slate-900", "{generic}" }
 
-                            div { class: "mt-0.5 text-sm text-slate-500", "{generic}" }
+                            div { class: "mt-0.5 text-sm text-slate-500", "{product}" }
                         }
 
                         button {
                             class: "mt-6 rounded-[10px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60",
 
                             r#type: "button",
-                            disabled: loading(),
+                            disabled: researching(),
 
                             onclick: {
                                 let patient_id = research_patient_id.clone();
@@ -182,19 +246,20 @@ pub fn Information(patient_id: String) -> Element {
                                     let generic_name = generic.clone();
                                     let patient_id = patient_id.clone();
 
-                                    loading.set(true);
+                                    researching.set(true);
                                     error.set(None);
 
                                     spawn(async move {
                                         match research_medicine(&generic_name).await {
                                             Ok(result) => {
-                                                loading.set(false);
                                                 information.set(Some(result));
+                                                researching.set(false);
 
                                                 let search = SearchHistory {
                                                     product: product_name,
                                                     generic: generic_name,
                                                 };
+
                                                 match add_search_history(&patient_id, search) {
                                                     Ok(()) => {
                                                         match get_search_history(&patient_id) {
@@ -215,7 +280,7 @@ pub fn Information(patient_id: String) -> Element {
                                             }
 
                                             Err(err) => {
-                                                loading.set(false);
+                                                researching.set(false);
                                                 error.set(Some(err.to_string()));
                                             }
                                         }
@@ -223,8 +288,13 @@ pub fn Information(patient_id: String) -> Element {
                                 }
                             },
 
-                            if loading() {
-                                "Researching..."
+                            if researching() {
+                                div { class: "flex items-center justify-center gap-2",
+
+                                    div { class: "h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" }
+
+                                    "Searching..."
+                                }
                             } else {
                                 "Yes, continue"
                             }
@@ -242,7 +312,7 @@ pub fn Information(patient_id: String) -> Element {
                         h2 { class: "text-lg font-semibold text-slate-900", "Past Searches" }
 
                         button {
-                            class: "text-sm text-slate-500 transition hover:text-red-600",
+                            class: "rounded-[9px] border border-slate-200 px-3 py-1.5 text-sm text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600",
 
                             r#type: "button",
 
@@ -268,26 +338,69 @@ pub fn Information(patient_id: String) -> Element {
 
                     div { class: "space-y-2",
 
-                        for item in history() {
-                            button {
-                                class: "w-full rounded-[10px] border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-blue-300 hover:bg-blue-50",
+                        for (_, history) in history().iter().enumerate() {
+                            {
+                                let product = history.product.clone();
+                                let generic = history.generic.clone();
 
-                                r#type: "button",
+                                rsx! {
+                                    div {
+                                    class: "flex flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between",
 
-                                onclick: {
-                                    let item = item.clone();
+                                        div {
+                                            p {
+                                                class: "text-sm font-medium text-slate-800",
+                                                "{generic}"
+                                            }
 
-                                    move |_| {
-                                        search_term.set(item.product.clone());
-                                        medicine.set(Some((item.product.clone(), item.generic.clone())));
-                                        information.set(None);
-                                        error.set(None);
+                                            p {
+                                                class: "mt-1 text-xs text-slate-400",
+                                                "{product}"
+                                            }
+                                        }
+
+                                        button {
+                                            class: "self-start rounded-[9px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-700 hover:text-white sm:self-auto",
+
+                                            r#type: "button",
+                                            disabled: researching(),
+
+                                            onclick: {
+                                                let product = product.clone();
+                                                let generic = generic.clone();
+
+                                                move |_| {
+                                                    let product_name = product.clone();
+                                                    let generic_name = generic.clone();
+
+                                                    search_term.set(product_name.clone());
+                                                    medicine.set(Some((product_name, generic_name.clone())));
+                                                    error.set(None);
+                                                    from_history.set(true);
+                                                    researching.set(true);
+
+                                                    // Keep any existing information visible
+                                                    // while loading a new history result.
+                                                    spawn(async move {
+                                                        match research_medicine(&generic_name).await {
+                                                            Ok(result) => {
+                                                                information.set(Some(result));
+                                                                researching.set(false);
+                                                            }
+
+                                                            Err(err) => {
+                                                                researching.set(false);
+                                                                error.set(Some(err.to_string()));
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            },
+
+                                            "->"
+                                        }
                                     }
-                                },
-
-                                div { class: "font-medium text-slate-900", "{item.product}" }
-
-                                div { class: "mt-0.5 text-sm text-slate-500", "{item.generic}" }
+                                }
                             }
                         }
                     }

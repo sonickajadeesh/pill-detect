@@ -24,25 +24,30 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
     let mut interaction_history = use_signal(|| Vec::<InteractionHistory>::new());
 
-    // Load interaction history
-    use_effect({
-        let patient_id = patient_id.clone();
+    // Clone patient ID for history loading.
+    let history_patient_id = patient_id.clone();
 
-        move || {
-            let patient_id = patient_id.clone();
+    // Clone patient ID for the interaction check.
+    let check_patient_id = patient_id.clone();
 
-            spawn(async move {
-                match get_interaction_history(&patient_id) {
-                    Ok(history) => {
-                        interaction_history.set(history);
-                    }
+    // Clone patient ID for clearing history.
+    let clear_patient_id = patient_id.clone();
 
-                    Err(err) => {
-                        eprintln!("Failed to load interaction history: {err}");
-                    }
+    // Load interaction history.
+    use_effect(move || {
+        let patient_id = history_patient_id.clone();
+
+        spawn(async move {
+            match get_interaction_history(&patient_id) {
+                Ok(history) => {
+                    interaction_history.set(history);
                 }
-            });
-        }
+
+                Err(err) => {
+                    eprintln!("Failed to load interaction history: {err}");
+                }
+            }
+        });
     });
 
     rsx! {
@@ -149,9 +154,9 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                         disabled: loading(),
 
                         if loading() {
-                            "Identifying..."
+                            div { class: "h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" }
                         } else {
-                            "Add medicine"
+                            "🔍︎"
                         }
                     }
                 }
@@ -214,108 +219,109 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                     }
                 }
 
-                // Check interactions
-                div { class: "mt-6 border-t border-slate-200 pt-5",
+                // Check safety
+                if !selected_medicines.read().is_empty() {
+                    div { class: "mt-6 border-t border-slate-200 pt-5",
 
-                    button {
-                        class: "rounded-[10px] bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300",
+                        button {
+                            class: "rounded-[10px] bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300",
 
-                        r#type: "button",
+                            r#type: "button",
+                            disabled: interaction_loading(),
 
-                        disabled: selected_medicines.read().is_empty()
-                                                                            || interaction_loading(),
+                            onclick: {
+                                let patient_id = check_patient_id.clone();
 
-                        onclick: move |_| {
-                            let medicines: Vec<String> = selected_medicines
-                                .read()
-                                .iter()
-                                .map(|(generic, _)| generic.clone())
-                                .collect();
+                                move |_| {
+                                    let medicines: Vec<String> =
+                                        selected_medicines
+                                        .read()
+                                        .iter()
+                                        .map(|(generic, _)| generic.clone())
+                                        .collect();
 
-                            let patient_id = patient_id.clone();
+                                    let patient_id = patient_id.clone();
 
-                            interaction_loading.set(true);
-                            interaction_results.set(None);
+                                    interaction_loading.set(true);
+                                    interaction_results.set(None);
 
-                            spawn(async move {
-                                let patient =
-                                    match get_patient_id(&patient_id) {
-                                    Ok(patient) => patient,
+                                    spawn(async move {
+                                        let patient =
+                                            match get_patient_id(&patient_id) {
+                                            Ok(patient) => patient,
 
-                                    Err(err) => {
-                                        eprintln!("Failed to load patient: {err}");
-                                        interaction_loading.set(false);
-                                        return;
-                                    }
-                                };
+                                            Err(err) => {
+                                                eprintln!("Failed to load patient: {err}");
+                                                interaction_loading.set(false);
+                                                return;
+                                            }
+                                        };
 
-                                let allergies =
-                                    if patient.allergies.trim().is_empty() {
-                                    Vec::new()
-                                } else {
-                                    vec![patient.allergies]
-                                };
+                                        let allergies =
+                                            if patient.allergies.trim().is_empty()
+                                            {
+                                            Vec::new()
+                                        } else {
+                                            vec![patient.allergies]
+                                        };
 
-                                let medical_conditions =
-                                    if patient
-                                        .medical_conditions
-                                        .trim()
-                                        .is_empty()
-                                    {
-                                    Vec::new()
-                                } else {
-                                    vec![patient.medical_conditions]
-                                };
-
-                                match check_drug_interactions(
-                                        medicines.clone(),
-                                        allergies,
-                                        medical_conditions,
-                                    )
-                                    .await
-                                {
-                                    Ok(result) => {
-                                        if let Err(err) =
-                                            add_interaction_history(
-                                                &patient_id,
-                                                medicines,
-                                            )
+                                        let medical_conditions =
+                                            if patient
+                                                .medical_conditions
+                                                .trim()
+                                                .is_empty()
                                         {
-                                            eprintln!("Failed to save interaction history: {err}");
-                                        }
-                                        match get_interaction_history(&patient_id) {
-                                            Ok(history) => {
-                                                interaction_history
-                                                    .set(history);
+                                            Vec::new()
+                                        } else {
+                                            vec![patient.medical_conditions]
+                                        };
+
+                                        match check_drug_interactions(
+                                                medicines.clone(),
+                                                allergies,
+                                                medical_conditions,
+                                            )
+                                            .await
+                                        {
+                                            Ok(result) => {
+                                                if let Err(err) =
+                                                    add_interaction_history(
+                                                    &patient_id,
+                                                    medicines,
+                                                )
+                                                {
+                                                    eprintln!("Failed to save interaction history: {err}");
+                                                }
+                                                match get_interaction_history(&patient_id) {
+                                                    Ok(history) => {
+                                                        interaction_history
+                                                            .set(history);
+                                                    }
+
+                                                    Err(err) => {
+                                                        eprintln!("Failed to refresh interaction history: {err}");
+                                                    }
+                                                }
+
+                                                interaction_results
+                                                    .set(Some(result));
                                             }
 
                                             Err(err) => {
-                                                eprintln!("Failed to refresh interaction history: {err}");
+                                                eprintln!("Drug interaction check failed: {err}");
                                             }
                                         }
 
-                                        interaction_results.set(Some(result));
-                                    }
-
-                                    Err(err) => {
-                                        eprintln!("Drug interaction check failed: {err}");
-                                    }
+                                        interaction_loading.set(false);
+                                    });
                                 }
+                            },
 
-                                interaction_loading.set(false);
-                            });
-                        },
-
-                        if interaction_loading() {
-                            "Checking..."
-                        } else {
-                            "Check safety"
-                        }
-                    }
-
-                    if selected_medicines.read().is_empty() {
-                        p { class: "mt-2 text-xs text-slate-400",
-                            "Add at least one medicine to check for interactions and safety concerns."
+                            if interaction_loading() {
+                                "Checking..."
+                            } else {
+                                "Check safety"
+                            }
                         }
                     }
                 }
@@ -440,7 +446,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                             r#type: "button",
 
                             onclick: {
-                                let patient_id = patient_id.clone();
+                                let patient_id = clear_patient_id.clone();
 
                                 move |_| {
                                     match clear_interaction_history(&patient_id) {
@@ -485,7 +491,8 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                             r#type: "button",
 
                                             onclick: {
-                                                let medicines = medicines.clone();
+                                                let medicines =
+                                                    medicines.clone();
 
                                                 move |_| {
                                                     selected_medicines
