@@ -81,10 +81,8 @@ pub fn Dashboard(patient_id: String) -> Element {
                             }
                         },
 
-                        "📋"
-
                         div { class: "mt-2 text-sm font-semibold text-gray-800 sm:text-base",
-                            "Prescription"
+                            "Prescription Analysis 📋"
                         }
 
                         p { class: "mt-1 text-xs text-gray-500 sm:text-sm",
@@ -107,10 +105,8 @@ pub fn Dashboard(patient_id: String) -> Element {
                             }
                         },
 
-                        "🔎"
-
                         div { class: "mt-2 text-sm font-semibold text-gray-800 sm:text-base",
-                            "Medicine Details"
+                            "Medicine Details 🔎"
                         }
 
                         p { class: "mt-1 text-xs text-gray-500 sm:text-sm",
@@ -133,10 +129,8 @@ pub fn Dashboard(patient_id: String) -> Element {
                             }
                         },
 
-                        "💬"
-
                         div { class: "mt-2 text-sm font-semibold text-gray-800 sm:text-base",
-                            "Symptom Guidance"
+                            "Symptom Guidance 💬"
                         }
 
                         p { class: "mt-1 text-xs text-gray-500 sm:text-sm",
@@ -148,10 +142,8 @@ pub fn Dashboard(patient_id: String) -> Element {
                         class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
                         r#type: "button",
 
-                        "⚠️"
-
                         div { class: "mt-2 text-sm font-semibold text-gray-800 sm:text-base",
-                            "Drug Interactions"
+                            "Drug Interactions ⚠️"
                         }
 
                         p { class: "mt-1 text-xs text-gray-500 sm:text-sm",
