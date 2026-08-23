@@ -2,7 +2,10 @@ use dioxus::prelude::*;
 
 use crate::{
     components::navbar::Navbar,
-    modules::prompts::{DrugInteractionResponse, check_drug_interactions, identify_medicine},
+    modules::{
+        database::get_patient_id,
+        prompts::{DrugInteractionResponse, check_drug_interactions, identify_medicine},
+    },
 };
 
 #[component]
@@ -19,7 +22,8 @@ pub fn DrugInteraction(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        main { class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
+        main {
+            class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
 
             // Header
             h1 {
@@ -29,7 +33,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
             p {
                 class: "mt-2 mb-8 text-base text-slate-500",
-                "Check whether two or more medicines may interact with each other."
+                "Check medicines for interactions and potential safety concerns."
             }
 
             // Medicine selection
@@ -38,12 +42,12 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                 h2 {
                     class: "mb-1 text-lg font-semibold text-slate-900",
-                    "Select medicines"
+                    "Select medicines to check"
                 }
 
                 p {
                     class: "mb-5 text-sm text-slate-500",
-                    "Enter a medicine name or brand name to add it to the interaction check."
+                    "Enter a medicine name or brand name to add it to the safety check."
                 }
 
                 form {
@@ -209,7 +213,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                         r#type: "button",
 
-                        disabled: selected_medicines.read().len() < 2
+                        disabled: selected_medicines.read().is_empty()
                             || interaction_loading(),
 
                         onclick: move |_| {
@@ -219,11 +223,44 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                 .map(|(generic, _)| generic.clone())
                                 .collect();
 
+                            let patient_id = patient_id.clone();
+
                             interaction_loading.set(true);
                             interaction_results.set(None);
 
                             spawn(async move {
-                                match check_drug_interactions(medicines).await {
+                                let patient = match get_patient_id(&patient_id) {
+                                    Ok(patient) => patient,
+
+                                    Err(err) => {
+                                        eprintln!(
+                                            "Failed to load patient: {err}"
+                                        );
+                                        interaction_loading.set(false);
+                                        return;
+                                    }
+                                };
+
+                                let allergies = if patient.allergies.trim().is_empty() {
+                                    Vec::new()
+                                } else {
+                                    vec![patient.allergies]
+                                };
+
+                                let medical_conditions =
+                                    if patient.medical_conditions.trim().is_empty() {
+                                        Vec::new()
+                                    } else {
+                                        vec![patient.medical_conditions]
+                                    };
+
+                                match check_drug_interactions(
+                                    medicines,
+                                    allergies,
+                                    medical_conditions,
+                                )
+                                .await
+                                {
                                     Ok(result) => {
                                         interaction_results.set(Some(result));
                                     }
@@ -242,14 +279,14 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                         if interaction_loading() {
                             "Checking..."
                         } else {
-                            "Check interactions"
+                            "Check safety"
                         }
                     }
 
-                    if selected_medicines.read().len() < 2 {
+                    if selected_medicines.read().is_empty() {
                         p {
                             class: "mt-2 text-xs text-slate-400",
-                            "Add at least two medicines to check for interactions."
+                            "Add at least one medicine to check for interactions and safety concerns."
                         }
                     }
                 }
@@ -265,12 +302,12 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                         h2 {
                             class: "text-lg font-semibold text-slate-900",
-                            "Interaction results"
+                            "Safety check results"
                         }
 
                         p {
                             class: "mt-1 text-sm text-slate-500",
-                            "The results of your interaction check."
+                            "Potential interactions and safety concerns identified from the selected medicines and patient information."
                         }
                     }
 
@@ -295,7 +332,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                                     p {
                                         class: "mt-1 text-sm leading-6 text-green-700",
-                                        "These medicines are not known to have a clinically significant interaction and can generally be taken together as directed."
+                                        "No clinically significant interactions or safety concerns were identified for the selected medicine and the patient's recorded information."
                                     }
                                 }
                             }
@@ -339,9 +376,16 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                             div {
                                                 class: "flex flex-wrap items-center justify-between gap-3",
 
-                                                h3 {
-                                                    class: "font-semibold text-slate-900",
-                                                    "{interaction.drugs.join(\" ↔ \")}"
+                                                div {
+                                                    h3 {
+                                                        class: "font-semibold text-slate-900",
+                                                        "{interaction.drugs.join(\" ↔ \")}"
+                                                    }
+
+                                                    p {
+                                                        class: "mt-1 text-xs font-medium uppercase tracking-wide text-slate-500",
+                                                        "{interaction.r#type}"
+                                                    }
                                                 }
 
                                                 span {

@@ -34,6 +34,7 @@ pub struct PrescriptionMedication {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DrugInteraction {
+    pub r#type: String,
     pub drugs: Vec<String>,
     pub severity: String,
     pub interaction: String,
@@ -131,6 +132,8 @@ Return JSON only:
 
 pub async fn check_drug_interactions(
     medicines: Vec<String>,
+    allergies: Vec<String>,
+    medical_conditions: Vec<String>,
 ) -> Result<DrugInteractionResponse, Box<dyn std::error::Error>> {
     let medicine_list = medicines
         .iter()
@@ -138,19 +141,47 @@ pub async fn check_drug_interactions(
         .collect::<Vec<_>>()
         .join("\n");
 
+    let allergy_list = if allergies.is_empty() {
+        "- None recorded".to_string()
+    } else {
+        allergies
+            .iter()
+            .map(|allergy| format!("- {allergy}"))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    let condition_list = if medical_conditions.is_empty() {
+        "- None recorded".to_string()
+    } else {
+        medical_conditions
+            .iter()
+            .map(|condition| format!("- {condition}"))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
     let prompt = format!(
         r#"
-Check these medicines for clinically relevant drug interactions:
+Check these medicines for clinically relevant safety concerns.
 
+Medicines:
 {medicine_list}
+
+Allergies:
+{allergy_list}
+
+Medical conditions:
+{condition_list}
 
 Return ONLY valid JSON:
 
 {{
     "interactions": [
         {{
+            "type": "drug-drug | allergy | condition",
             "drugs": ["Drug A", "Drug B", ...],
-            "severity": "High | Moderate | Low | None",
+            "severity": "High | Moderate | Low",
             "interaction": "...",
             "effects": "...",
             "recommendation": "..."
@@ -158,11 +189,14 @@ Return ONLY valid JSON:
     ]
 }}
 
-Check all medicines and include every clinically relevant interaction.
-Do not invent interactions. If none exist, return an empty "interactions" array.
+Check all medicines against each other, the recorded allergies, and medical conditions.
+Include every clinically relevant concern. Do not invent interactions.
+If there are no concerns, return an empty "interactions" array.
 Keep the response concise and patient-friendly.
-    "#,
+"#,
         medicine_list = medicine_list,
+        allergy_list = allergy_list,
+        condition_list = condition_list,
     );
 
     let response = prompt_ai(&prompt).await?;
