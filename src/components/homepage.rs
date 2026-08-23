@@ -362,8 +362,7 @@ pub fn Homepage() -> Element {
 
             // Registration modal
             if show_registration() {
-                div {
-                    class: "fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-5",
+                div { class: "fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-5",
 
                     div {
                         class: "relative max-h-[90vh] w-full max-w-[600px] overflow-y-auto rounded-xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.2)]",
