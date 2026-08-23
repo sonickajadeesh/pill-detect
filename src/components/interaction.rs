@@ -48,31 +48,23 @@ pub fn DrugInteraction(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        main {
-            class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
+        main { class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
 
             // Header
-            h1 {
-                class: "text-[32px] font-bold tracking-tight text-slate-900",
+            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
                 "Drug Interaction ⚠️"
             }
 
-            p {
-                class: "mt-2 mb-8 text-base text-slate-500",
+            p { class: "mt-2 mb-8 text-base text-slate-500",
                 "Check medicines for interactions and potential safety concerns."
             }
 
             // Medicine selection
-            section {
-                class: "rounded-[14px] border border-slate-200 bg-slate-50 p-5",
+            section { class: "rounded-[14px] border border-slate-200 bg-slate-50 p-5",
 
-                h2 {
-                    class: "mb-1 text-lg font-semibold text-slate-900",
-                    "Select medicines to check"
-                }
+                h2 { class: "mb-1 text-lg font-semibold text-slate-900", "Select medicines to check" }
 
-                p {
-                    class: "mb-5 text-sm text-slate-500",
+                p { class: "mb-5 text-sm text-slate-500",
                     "Enter a medicine name or brand name to add it to the safety check."
                 }
 
@@ -97,45 +89,38 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                     loading.set(false);
 
                                     if result.found {
-                                        let generic =
-                                            result.generic.trim().to_string();
-
-                                        let brand =
-                                            result.product.trim().to_string();
+                                        let generic = result.generic.trim().to_string();
+                                        let brand = result.product.trim().to_string();
 
                                         if generic.is_empty() {
-                                            error.set(Some(
-                                                "The medicine was identified, but no generic name was returned."
-                                                    .to_string(),
-                                            ));
+                                            error
+                                                .set(
+                                                    Some(
+                                                        "The medicine was identified, but no generic name was returned."
+                                                            .to_string(),
+                                                    ),
+                                                );
                                             return;
                                         }
-
-                                        if !selected_medicines
+                                        let already_selected = selected_medicines
                                             .read()
                                             .iter()
-                                            .any(|(g, _)| {
-                                                g.eq_ignore_ascii_case(&generic)
-                                            })
-                                        {
-                                            selected_medicines
-                                                .write()
-                                                .push((generic, brand));
-
-                                            // Clear previous results because
-                                            // the medicine list changed.
+                                            .any(|(g, _)| g.eq_ignore_ascii_case(&generic));
+                                        if !already_selected {
+                                            selected_medicines.write().push((generic, brand));
                                             interaction_results.set(None);
                                         }
-
                                         medicine_input.set(String::new());
                                     } else {
-                                        error.set(Some(
-                                            "Couldn't confidently identify that medicine. Please check again."
-                                                .to_string(),
-                                        ));
+                                        error
+                                            .set(
+                                                Some(
+                                                    "Couldn't confidently identify that medicine. Please check again."
+                                                        .to_string(),
+                                                ),
+                                            );
                                     }
                                 }
-
                                 Err(err) => {
                                     loading.set(false);
                                     error.set(Some(err.to_string()));
@@ -173,24 +158,18 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                 // Error
                 if let Some(message) = error() {
-                    p {
-                        class: "mt-4 rounded-[10px] border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700",
+                    p { class: "mt-4 rounded-[10px] border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700",
                         "{message}"
                     }
                 }
 
                 // Selected medicines
                 if !selected_medicines.read().is_empty() {
-                    div {
-                        class: "mt-6",
+                    div { class: "mt-6",
 
-                        h3 {
-                            class: "mb-3 text-sm font-semibold text-slate-700",
-                            "Selected medicines"
-                        }
+                        h3 { class: "mb-3 text-sm font-semibold text-slate-700", "Selected medicines" }
 
-                        div {
-                            class: "flex flex-wrap gap-2",
+                        div { class: "flex flex-wrap gap-2",
 
                             for (index, (generic, brand)) in selected_medicines.read().iter().enumerate() {
                                 {
@@ -202,14 +181,13 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                             key: "{index}",
                                             class: "flex items-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700",
 
-                                            span {
-                                                class: "font-medium",
+                                            span { class: "font-medium",
 
                                                 if brand.is_empty() {
-                                                       "{generic}"
-                                                   } else {
-                                                       "{generic} ({brand})"
-                                                   }
+                                                    "{generic}"
+                                                } else {
+                                                    "{generic} ({brand})"
+                                                }
                                             }
 
                                             button {
@@ -237,8 +215,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                 }
 
                 // Check interactions
-                div {
-                    class: "mt-6 border-t border-slate-200 pt-5",
+                div { class: "mt-6 border-t border-slate-200 pt-5",
 
                     button {
                         class: "rounded-[10px] bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300",
@@ -246,7 +223,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                         r#type: "button",
 
                         disabled: selected_medicines.read().is_empty()
-                            || interaction_loading(),
+                                                                            || interaction_loading(),
 
                         onclick: move |_| {
                             let medicines: Vec<String> = selected_medicines
@@ -263,23 +240,21 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                             spawn(async move {
                                 let patient =
                                     match get_patient_id(&patient_id) {
-                                        Ok(patient) => patient,
+                                    Ok(patient) => patient,
 
-                                        Err(err) => {
-                                            eprintln!(
-                                                "Failed to load patient: {err}"
-                                            );
-                                            interaction_loading.set(false);
-                                            return;
-                                        }
-                                    };
+                                    Err(err) => {
+                                        eprintln!("Failed to load patient: {err}");
+                                        interaction_loading.set(false);
+                                        return;
+                                    }
+                                };
 
                                 let allergies =
                                     if patient.allergies.trim().is_empty() {
-                                        Vec::new()
-                                    } else {
-                                        vec![patient.allergies]
-                                    };
+                                    Vec::new()
+                                } else {
+                                    vec![patient.allergies]
+                                };
 
                                 let medical_conditions =
                                     if patient
@@ -287,55 +262,43 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                         .trim()
                                         .is_empty()
                                     {
-                                        Vec::new()
-                                    } else {
-                                        vec![patient.medical_conditions]
-                                    };
+                                    Vec::new()
+                                } else {
+                                    vec![patient.medical_conditions]
+                                };
 
                                 match check_drug_interactions(
-                                    medicines.clone(),
-                                    allergies,
-                                    medical_conditions,
-                                )
-                                .await
+                                        medicines.clone(),
+                                        allergies,
+                                        medical_conditions,
+                                    )
+                                    .await
                                 {
                                     Ok(result) => {
-                                        // Save only the medicines checked.
                                         if let Err(err) =
                                             add_interaction_history(
                                                 &patient_id,
                                                 medicines,
                                             )
                                         {
-                                            eprintln!(
-                                                "Failed to save interaction history: {err}"
-                                            );
+                                            eprintln!("Failed to save interaction history: {err}");
                                         }
-
-                                        // Refresh history.
-                                        match get_interaction_history(
-                                            &patient_id,
-                                        ) {
+                                        match get_interaction_history(&patient_id) {
                                             Ok(history) => {
                                                 interaction_history
                                                     .set(history);
                                             }
 
                                             Err(err) => {
-                                                eprintln!(
-                                                    "Failed to refresh interaction history: {err}"
-                                                );
+                                                eprintln!("Failed to refresh interaction history: {err}");
                                             }
                                         }
 
-                                        interaction_results
-                                            .set(Some(result));
+                                        interaction_results.set(Some(result));
                                     }
 
                                     Err(err) => {
-                                        eprintln!(
-                                            "Drug interaction check failed: {err}"
-                                        );
+                                        eprintln!("Drug interaction check failed: {err}");
                                     }
                                 }
 
@@ -351,8 +314,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                     }
 
                     if selected_medicines.read().is_empty() {
-                        p {
-                            class: "mt-2 text-xs text-slate-400",
+                        p { class: "mt-2 text-xs text-slate-400",
                             "Add at least one medicine to check for interactions and safety concerns."
                         }
                     }
@@ -361,51 +323,39 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
             // Results
             if let Some(results) = interaction_results() {
-                section {
-                    class: "mt-6",
+                section { class: "mt-6",
 
-                    div {
-                        class: "mb-3",
+                    div { class: "mb-3",
 
-                        h2 {
-                            class: "text-lg font-semibold text-slate-900",
-                            "Safety check results"
-                        }
+                        h2 { class: "text-lg font-semibold text-slate-900", "Safety check results" }
 
-                        p {
-                            class: "mt-1 text-sm text-slate-500",
+                        p { class: "mt-1 text-sm text-slate-500",
                             "Potential interactions and safety concerns identified from the selected medicines and patient information."
                         }
                     }
 
                     if results.interactions.is_empty() {
-                        div {
-                            class: "rounded-[14px] border border-green-200 bg-green-50 p-6",
+                        div { class: "rounded-[14px] border border-green-200 bg-green-50 p-6",
 
-                            div {
-                                class: "flex items-start gap-4",
+                            div { class: "flex items-start gap-4",
 
-                                div {
-                                    class: "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-lg text-green-700",
+                                div { class: "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-lg text-green-700",
                                     "✓"
                                 }
 
                                 div {
-                                    h3 {
-                                        class: "font-semibold text-green-900",
+                                    h3 { class: "font-semibold text-green-900",
                                         "No interactions found"
                                     }
 
-                                    p {
-                                        class: "mt-1 text-sm leading-6 text-green-700",
+                                    p { class: "mt-1 text-sm leading-6 text-green-700",
                                         "No clinically significant interactions or safety concerns were identified for the selected medicine and the patient's recorded information."
                                     }
                                 }
                             }
                         }
                     } else {
-                        div {
-                            class: "space-y-4",
+                        div { class: "space-y-4",
 
                             for interaction in results.interactions {
                                 {
@@ -414,89 +364,49 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                                     let (card_class, badge_class) =
                                         match severity.as_str() {
-                                            "high" => (
-                                                "border-red-200 bg-red-50",
-                                                "bg-red-100 text-red-700",
-                                            ),
-
-                                            "moderate" | "medium" => (
-                                                "border-yellow-200 bg-yellow-50",
-                                                "bg-yellow-100 text-yellow-800",
-                                            ),
-
-                                            "low" => (
-                                                "border-slate-200 bg-slate-50",
-                                                "bg-slate-100 text-slate-700",
-                                            ),
-
-                                            _ => (
-                                                "border-slate-200 bg-white",
-                                                "bg-slate-100 text-slate-700",
-                                            ),
-                                        };
-
+                                        "high" => ("border-red-200 bg-red-50", "bg-red-100 text-red-700"),
+                                        "moderate" | "medium" => {
+                                            ("border-yellow-200 bg-yellow-50", "bg-yellow-100 text-yellow-800")
+                                        }
+                                        "low" => ("border-slate-200 bg-slate-50", "bg-slate-100 text-slate-700"),
+                                        _ => ("border-slate-200 bg-white", "bg-slate-100 text-slate-700"),
+                                    };
                                     rsx! {
-                                        div {
-                                            class: "rounded-[14px] border p-6 {card_class}",
+                                        div { class: "rounded-[14px] border p-6 {card_class}",
 
-                                            div {
-                                                class: "flex flex-wrap items-center justify-between gap-3",
+                                            div { class: "flex flex-wrap items-center justify-between gap-3",
 
                                                 div {
-                                                    h3 {
-                                                        class: "font-semibold text-slate-900",
-                                                        "{interaction.drugs.join(\" ↔ \")}"
-                                                    }
+                                                    h3 { class: "font-semibold text-slate-900", "{interaction.drugs.join(\" ↔ \")}" }
 
-                                                    p {
-                                                        class: "mt-1 text-xs font-medium uppercase tracking-wide text-slate-500",
+                                                    p { class: "mt-1 text-xs font-medium uppercase tracking-wide text-slate-500",
                                                         "{interaction.r#type}"
                                                     }
                                                 }
 
-                                                span {
-                                                    class: "rounded-full px-3 py-1 text-xs font-semibold {badge_class}",
+                                                span { class: "rounded-full px-3 py-1 text-xs font-semibold {badge_class}",
                                                     "{interaction.severity}"
                                                 }
                                             }
 
-                                            div {
-                                                class: "mt-5 space-y-4",
+                                            div { class: "mt-5 space-y-4",
 
                                                 div {
-                                                    h4 {
-                                                        class: "text-sm font-semibold text-slate-700",
-                                                        "Interaction"
-                                                    }
+                                                    h4 { class: "text-sm font-semibold text-slate-700", "Interaction" }
 
-                                                    p {
-                                                        class: "mt-1 text-sm leading-6 text-slate-600",
-                                                        "{interaction.interaction}"
-                                                    }
+                                                    p { class: "mt-1 text-sm leading-6 text-slate-600", "{interaction.interaction}" }
                                                 }
 
                                                 div {
-                                                    h4 {
-                                                        class: "text-sm font-semibold text-slate-700",
-                                                        "Possible effects"
-                                                    }
+                                                    h4 { class: "text-sm font-semibold text-slate-700", "Possible effects" }
 
-                                                    p {
-                                                        class: "mt-1 text-sm leading-6 text-slate-600",
-                                                        "{interaction.effects}"
-                                                    }
+                                                    p { class: "mt-1 text-sm leading-6 text-slate-600", "{interaction.effects}" }
                                                 }
 
                                                 div {
-                                                    h4 {
-                                                        class: "text-sm font-semibold text-slate-700",
-                                                        "Recommendation"
-                                                    }
+                                                    h4 { class: "text-sm font-semibold text-slate-700", "Recommendation" }
 
-                                                    p {
-                                                        class: "mt-1 text-sm leading-6 text-slate-600",
-                                                        "{interaction.recommendation}"
-                                                    }
+                                                    p { class: "mt-1 text-sm leading-6 text-slate-600", "{interaction.recommendation}" }
                                                 }
                                             }
                                         }
@@ -510,20 +420,16 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
             // Past interaction checks
             if !interaction_history.read().is_empty() {
-                section {
-                    class: "mt-8",
+                section { class: "mt-8",
 
-                    div {
-                        class: "mb-4 flex items-center justify-between gap-4",
+                    div { class: "mb-4 flex items-center justify-between gap-4",
 
                         div {
-                            h2 {
-                                class: "text-lg font-semibold text-slate-900",
+                            h2 { class: "text-lg font-semibold text-slate-900",
                                 "Past interaction checks"
                             }
 
-                            p {
-                                class: "mt-1 text-sm text-slate-500",
+                            p { class: "mt-1 text-sm text-slate-500",
                                 "Previously checked medicines for this patient."
                             }
                         }
@@ -539,13 +445,12 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                 move |_| {
                                     match clear_interaction_history(&patient_id) {
                                         Ok(_) => {
-                                            interaction_history.set(Vec::new());
+                                            interaction_history
+                                                .set(Vec::new());
                                         }
 
                                         Err(err) => {
-                                            eprintln!(
-                                                "Failed to clear interaction history: {err}"
-                                            );
+                                            eprintln!("Failed to clear interaction history: {err}");
                                         }
                                     }
                                 }
@@ -555,8 +460,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                         }
                     }
 
-                    div {
-                        class: "space-y-3",
+                    div { class: "space-y-3",
 
                         for (index, history) in interaction_history.read().iter().enumerate() {
                             {
@@ -570,15 +474,9 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                         class: "flex flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between",
 
                                         div {
-                                            p {
-                                                class: "text-sm font-medium text-slate-800",
-                                                "{display_medicines}"
-                                            }
+                                            p { class: "text-sm font-medium text-slate-800", "{display_medicines}" }
 
-                                            p {
-                                                class: "mt-1 text-xs text-slate-400",
-                                                "{medicines.len()} medicine(s) checked"
-                                            }
+                                            p { class: "mt-1 text-xs text-slate-400", "{medicines.len()} medicine(s) checked" }
                                         }
 
                                         button {
@@ -586,24 +484,21 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                                             r#type: "button",
 
-                                            onclick: move |_| {
-                                                let medicines =
-                                                    medicines.clone();
+                                            onclick: {
+                                                let medicines = medicines.clone();
 
-                                                selected_medicines.set(
-                                                    medicines
-                                                        .into_iter()
-                                                        .map(|medicine| {
-                                                            (
-                                                                medicine.clone(),
-                                                                String::new(),
-                                                            )
-                                                        })
-                                                        .collect(),
-                                                );
+                                                move |_| {
+                                                    selected_medicines
+                                                        .set(
+                                                            medicines
+                                                                .iter()
+                                                                .map(|medicine| { (medicine.clone(), String::new()) })
+                                                                .collect(),
+                                                        );
 
-                                                interaction_results
-                                                    .set(None);
+                                                    interaction_results
+                                                        .set(None);
+                                                }
                                             },
 
                                             "->"
