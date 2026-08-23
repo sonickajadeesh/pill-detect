@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 
 use components::{
     dashboard::Dashboard, footer::Footer, guidance::Guidance, homepage::Homepage,
-    information::Information, prescription::PrescriptionAnalysis,
+    information::Information, interaction::DrugInteraction, prescription::PrescriptionAnalysis,
 };
 
 #[derive(Routable, Clone, PartialEq)]
@@ -21,6 +21,9 @@ pub enum Route {
 
     #[route("/:patient_id/information/")]
     Information { patient_id: String },
+
+    #[route("/:patient_id/interaction/")]
+    DrugInteraction { patient_id: String },
 
     #[route("/:patient_id/prescriptions/")]
     PrescriptionAnalysis { patient_id: String },

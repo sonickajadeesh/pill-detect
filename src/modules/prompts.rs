@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::modules::api::{prompt_ai, prompt_image};
 
@@ -30,6 +30,20 @@ pub struct PrescriptionMedication {
     pub dosage: String,
     pub duration: String,
     pub instructions: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DrugInteraction {
+    pub drugs: Vec<String>,
+    pub severity: String,
+    pub interaction: String,
+    pub effects: String,
+    pub recommendation: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DrugInteractionResponse {
+    pub interactions: Vec<DrugInteraction>,
 }
 
 pub async fn identify_medicine(
@@ -113,4 +127,54 @@ Return JSON only:
     let analysis: PrescriptionAnalysis = serde_json::from_str(&response)?;
 
     Ok(analysis)
+}
+
+pub async fn check_drug_interactions(
+    medicines: Vec<String>,
+) -> Result<DrugInteractionResponse, Box<dyn std::error::Error>> {
+    let medicine_list = medicines
+        .iter()
+        .map(|medicine| format!("- {medicine}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let prompt = format!(
+        r#"
+Check these medicines for clinically relevant drug interactions:
+
+{medicine_list}
+
+Return ONLY valid JSON:
+
+{{
+    "interactions": [
+        {{
+            "drugs": ["Drug A", "Drug B", ...],
+            "severity": "High | Moderate | Low | None",
+            "interaction": "...",
+            "effects": "...",
+            "recommendation": "..."
+        }}
+    ]
+}}
+
+Check all medicines and include every clinically relevant interaction.
+Do not invent interactions. If none exist, return an empty "interactions" array.
+Keep the response concise and patient-friendly.
+    "#,
+        medicine_list = medicine_list,
+    );
+
+    let response = prompt_ai(&prompt).await?;
+
+    let response = response
+        .trim()
+        .trim_start_matches("```json")
+        .trim_start_matches("```")
+        .trim_end_matches("```")
+        .trim();
+
+    let result: DrugInteractionResponse = serde_json::from_str(response)?;
+
+    Ok(result)
 }
