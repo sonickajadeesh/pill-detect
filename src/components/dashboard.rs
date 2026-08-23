@@ -1,6 +1,12 @@
 use dioxus::prelude::*;
 
-use crate::{Route, modules::api::clear_api_key};
+use crate::{
+    Route,
+    modules::{
+        api::clear_api_key,
+        utilities::{calculate_age, sentence_case},
+    },
+};
 
 #[component]
 pub fn Dashboard(patient_id: String) -> Element {
@@ -16,6 +22,8 @@ pub fn Dashboard(patient_id: String) -> Element {
             };
         }
     };
+
+    let age = calculate_age(&patient.date_of_birth).unwrap_or(0);
 
     rsx! {
         main { class: "relative flex min-h-[96vh] flex-col items-center px-4 py-10 text-center sm:px-5 sm:py-12",
@@ -49,23 +57,85 @@ pub fn Dashboard(patient_id: String) -> Element {
                 "🩺 Pill Detect"
             }
 
-            p { class: "mb-7 mt-2 text-sm text-gray-500 sm:mb-9 sm:whitespace-nowrap sm:text-base md:text-lg",
-                "Prescription Analysis • Medicine Details • Symptom Guidance • Drug Interaction"
-            }
-
-            div { class: "w-full max-w-[700px] rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6",
+            div { class: "mt-6 w-full max-w-[700px] rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6",
 
                 div { class: "mb-5 sm:mb-6",
 
+                    // Patient name
                     h2 { class: "text-xl font-bold text-gray-800 sm:text-2xl",
                         "{patient.first_name} {patient.last_name}"
                     }
 
-                    p { class: "mt-1 text-sm text-gray-500", "What would you like to do?" }
+                    // Patient details
+                    div { class: "mt-4 border-t border-gray-100 pt-4 text-left",
+
+                        // Basic information
+                        div { class: "text-center grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-5",
+
+                            div {
+                                p { class: "text-xs font-medium uppercase tracking-wide text-gray-400",
+                                    "Age"
+                                }
+                                p { class: "mt-0.5 text-sm font-semibold text-gray-700",
+                                    "{age} years"
+                                }
+                            }
+
+                            div {
+                                p { class: "text-xs font-medium uppercase tracking-wide text-gray-400",
+                                    "Sex"
+                                }
+                                p { class: "mt-0.5 text-sm font-semibold text-gray-700",
+                                    "{sentence_case(&patient.sex)}"
+                                }
+                            }
+
+                            div {
+                                p { class: "text-xs font-medium uppercase tracking-wide text-gray-400",
+                                    "Blood Group"
+                                }
+                                p { class: "mt-0.5 text-sm font-semibold text-gray-700",
+                                    "{sentence_case(&patient.blood_group)}"
+                                }
+                            }
+
+                            div {
+                                p { class: "text-xs font-medium uppercase tracking-wide text-gray-400",
+                                    "Height"
+                                }
+                                p { class: "mt-0.5 text-sm font-semibold text-gray-700",
+                                    "{patient.height} cm"
+                                }
+                            }
+
+                            div {
+                                p { class: "text-xs font-medium uppercase tracking-wide text-gray-400",
+                                    "Weight"
+                                }
+                                p { class: "mt-0.5 text-sm font-semibold text-gray-700",
+                                    "{patient.weight} kg"
+                                }
+                            }
+                        }
+
+                        div { class: "mt-4 flex flex-wrap justify-center gap-2",
+
+                            span { class: "rounded-full bg-amber-50 px-3 py-1.5 text-sm text-amber-900",
+                                "Allergy: {sentence_case(&patient.allergies)}"
+                            }
+
+                            span { class: "rounded-full bg-slate-200 px-3 py-1.5 text-sm text-slate-700",
+                                "Conditions: {sentence_case(&patient.medical_conditions)}"
+                            }
+                        }
+                    }
+
+                    p { class: "mt-5 text-sm text-gray-500", "What would you like to do?" }
                 }
 
                 div { class: "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4",
 
+                    // Prescription Analysis
                     button {
                         class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
                         r#type: "button",
@@ -90,8 +160,10 @@ pub fn Dashboard(patient_id: String) -> Element {
                         }
                     }
 
+                    // Medicine Details
                     button {
                         class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
+
                         r#type: "button",
 
                         onclick: {
@@ -114,8 +186,10 @@ pub fn Dashboard(patient_id: String) -> Element {
                         }
                     }
 
+                    // Symptom Guidance
                     button {
                         class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
+
                         r#type: "button",
 
                         onclick: {
@@ -138,8 +212,10 @@ pub fn Dashboard(patient_id: String) -> Element {
                         }
                     }
 
+                    // Drug Interactions
                     button {
                         class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
+
                         r#type: "button",
 
                         onclick: {
