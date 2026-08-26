@@ -64,6 +64,27 @@ If not confident, return false. Return JSON only: {{"found":true | false,"produc
     Ok(medicine)
 }
 
+pub async fn identify_medicine_image(
+    image_bytes: &[u8],
+    mime_type: &str,
+) -> Result<MedicineIdentification, Box<dyn std::error::Error>> {
+    let prompt = r#"
+Identify the medicine shown in this image which may contain a tablet strip, medicine box, medicine bottle, or pill container.
+Read the medicine label, brand name, generic name, strength, and other printed data. If you cannot confidently identify, return found as false.
+Determine product name and generic name.
+
+Return JSON only:
+{"found":true|false,"product":"","generic":""}
+    "#;
+
+    let response = crate::modules::api::prompt_image(image_bytes, mime_type, prompt).await?;
+
+    let identification: MedicineIdentification = serde_json::from_str(&response)
+        .map_err(|err| format!("Failed to parse medicine identification response: {err}"))?;
+
+    Ok(identification)
+}
+
 pub async fn research_medicine(
     generic: &str,
 ) -> Result<MedicineInformation, Box<dyn std::error::Error>> {
