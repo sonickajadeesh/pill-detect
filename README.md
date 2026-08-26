@@ -1,6 +1,6 @@
 # 🩺 Pill Detect
 
-**AI-powered medical assistant for medicine information, prescription analysis, symptom guidance, and drug interaction checking.**
+**AI-powered medical assistant for medicine identification, medicine information, prescription analysis, symptom guidance, and drug interaction checking.**
 
 [![Rust](https://img.shields.io/badge/Rust-2024-orange?logo=rust)](https://www.rust-lang.org/)
 [![Dioxus](https://img.shields.io/badge/Dioxus-0.7.10-blue)](https://dioxuslabs.com/)
@@ -12,11 +12,12 @@
 
 ## Overview
 
-**Pill Detect** is a privacy-focused, browser-based AI medical assistant designed to help users organize patient information and access useful medication-related guidance.
+**Pill Detect** is a privacy-focused, browser-based AI medical assistant designed to help users identify medicines, understand medication information, analyze prescriptions, and access useful health-related guidance.
 
 The application combines a **Rust + Dioxus frontend** with **Google Gemini** to provide:
 
-- 💊 Medicine identification and information
+- 💊 Medicine information and search
+- 📷 Medicine identification from images
 - 📋 Prescription image analysis
 - 💬 Symptom and health guidance
 - ⚠️ Drug interaction checking
@@ -50,9 +51,29 @@ Patient records and associated histories are stored locally in the browser using
 
 ---
 
+### 💊 Medicine Identification from Image
+
+Upload an image of a medicine, tablet, capsule, or medicine packaging and use AI-powered image analysis to identify the medicine.
+
+The feature can help identify:
+
+- Medicine name
+- Generic name
+- Strength
+- Manufacturer or product information when visible
+- Other relevant medication details
+
+The identified medicine can then be used to retrieve additional medicine information.
+
+> **Note:** Image-based identification is intended as an informational aid. Images can be unclear, medicines can look similar, and AI identification may be incorrect. Always verify the medicine with its packaging, prescription, pharmacist, or healthcare professional before taking it.
+
+---
+
 ### 💊 Medicine Information
 
-Search for a medicine and retrieve:
+Search for a medicine or use the result from image-based identification to retrieve medication information.
+
+Information may include:
 
 - Product name
 - Generic name
@@ -79,6 +100,8 @@ The analysis can identify:
 - Instructions
 
 The extracted prescription can then be saved to the patient's profile for future reference.
+
+**Medicine identification** focuses on identifying an individual medicine from an image, while **prescription analysis** focuses on extracting multiple medications and instructions from a prescription.
 
 ---
 
@@ -118,7 +141,7 @@ Interaction searches can also be stored in the patient's history.
 
 Pill Detect uses **Google Gemini** for its AI-powered functionality.
 
-The application communicates directly with the Gemini API for both text and image-based requests. Prescription images are encoded and sent as inline image data for analysis.
+The application communicates directly with the Gemini API for both text and image-based requests. Medicine images and prescription images are processed using Gemini's multimodal capabilities.
 
 The current implementation uses:
 
@@ -127,9 +150,13 @@ Dioxus Web App
       │
       ├── Patient Management
       │
+      ├── Medicine Identification
+      │       └── Image Analysis
+      │
       ├── Medicine Information
       │
       ├── Prescription Analysis
+      │       └── Image Analysis
       │
       ├── Symptom Guidance
       │
@@ -161,7 +188,7 @@ The Gemini API key is also stored locally in the browser after the user enters i
 | **Dioxus 0.7.10**      | UI framework                     |
 | **Dioxus Router**      | Client-side routing              |
 | **Tailwind CSS**       | Styling                          |
-| **Google Gemini API**  | AI and image analysis            |
+| **Google Gemini API**  | AI, text, and image analysis     |
 | **Serde / Serde JSON** | Data serialization               |
 | **Reqwest**            | HTTP requests                    |
 | **Gloo Storage**       | Browser local storage            |
@@ -245,7 +272,7 @@ Then open the local address shown by Dioxus.
 
 ---
 
-## 🔑 Gemini API Key
+## 🔑 API Key Requirement
 
 Pill Detect requires a **Google Gemini API key** for its AI features.
 
@@ -265,14 +292,14 @@ https://aistudio.google.com/apikey
 
 The application currently provides the following routes:
 
-| Route                         | Purpose                               |
-| ----------------------------- | ------------------------------------- |
-| `/`                           | Patient registration and patient list |
-| `/:patient_id/`               | Patient dashboard                     |
-| `/:patient_id/guidance`       | Symptom guidance                      |
-| `/:patient_id/information/`   | Medicine information                  |
-| `/:patient_id/interaction/`   | Drug interaction checker              |
-| `/:patient_id/prescriptions/` | Prescription analysis and management  |
+| Route                         | Purpose                                 |
+| ----------------------------- | --------------------------------------- |
+| `/`                           | Patient registration and patient list   |
+| `/:patient_id/`               | Patient dashboard                       |
+| `/:patient_id/guidance`       | Symptom guidance                        |
+| `/:patient_id/information/`   | Medicine information and identification |
+| `/:patient_id/interaction/`   | Drug interaction checker                |
+| `/:patient_id/prescriptions/` | Prescription analysis and management    |
 
 These routes are defined using the Dioxus router.
 
@@ -294,17 +321,19 @@ The repository also contains GitHub Actions configuration for the project.
 
 ---
 
-## ⚠️ Medical Disclaimer
+## ⚠️ Disclaimer
 
 Pill Detect is an **AI-assisted informational application**.
 
 It does not provide professional medical diagnosis, treatment, or emergency medical advice.
 
-AI-generated information may be incomplete, inaccurate, outdated, or inappropriate for a particular patient.
+AI-generated information and image-based medicine identification may be incomplete, inaccurate, outdated, or inappropriate for a particular patient.
 
 Always:
 
+- Verify medication identification before taking any medicine.
 - Verify medication information with reliable medical sources.
+- Check the medicine packaging and prescription when available.
 - Follow instructions from qualified healthcare professionals.
 - Consult a doctor or pharmacist before changing medication.
 - Seek professional medical care for serious or worsening symptoms.
