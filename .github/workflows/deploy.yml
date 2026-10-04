@@ -16,6 +16,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7

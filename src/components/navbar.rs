@@ -23,7 +23,7 @@ pub fn Navbar(patient_id: String) -> Element {
             div { class: "absolute left-1/2 -translate-x-1/2",
 
                 Link {
-                    to: Route::Homepage {},
+                    to: Route::Home {},
                     class: "text-lg font-semibold text-slate-900 hover:text-slate-700",
 
                     "🩺 Pill Detect"

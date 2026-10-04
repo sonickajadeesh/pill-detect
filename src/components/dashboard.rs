@@ -30,7 +30,7 @@ pub fn Dashboard(patient_id: String) -> Element {
 
             // Back button
             Link {
-                to: Route::Homepage {},
+                to: Route::Home {},
                 class: "absolute left-4 top-5 flex items-center gap-1 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 sm:left-5",
 
                 "← Back"
