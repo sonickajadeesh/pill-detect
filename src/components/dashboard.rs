@@ -77,7 +77,7 @@ pub fn Dashboard(patient_id: String) -> Element {
                                     "Age"
                                 }
                                 p { class: "mt-0.5 text-sm font-semibold text-gray-700",
-                                    "{age} years"
+                                    "{age}"
                                 }
                             }
 
@@ -121,11 +121,21 @@ pub fn Dashboard(patient_id: String) -> Element {
                         div { class: "mt-4 flex flex-wrap justify-center gap-2",
 
                             span { class: "rounded-full bg-amber-50 px-3 py-1.5 text-sm text-amber-900",
-                                "Allergy: {sentence_case(&patient.allergies)}"
+                                "😷 Allergies: "
+                                if patient.allergies.trim().is_empty() {
+                                    "None"
+                                } else {
+                                    "{sentence_case(&patient.allergies)}"
+                                }
                             }
 
                             span { class: "rounded-full bg-slate-200 px-3 py-1.5 text-sm text-slate-700",
-                                "Conditions: {sentence_case(&patient.medical_conditions)}"
+                                "📋 Conditions: "
+                                if patient.medical_conditions.trim().is_empty() {
+                                    "None"
+                                } else {
+                                    "{sentence_case(&patient.medical_conditions)}"
+                                }
                             }
                         }
                     }
