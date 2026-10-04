@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod checker;
 pub mod dashboard;
 pub mod footer;
 pub mod guidance;

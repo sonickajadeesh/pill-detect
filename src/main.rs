@@ -2,8 +2,9 @@ mod components;
 mod modules;
 
 use components::{
-    auth::AuthPage, dashboard::Dashboard, footer::Footer, guidance::Guidance, homepage::Homepage,
-    information::Information, interaction::DrugInteraction, prescription::PrescriptionAnalysis,
+    auth::AuthPage, checker::SymptomChecker, dashboard::Dashboard, footer::Footer,
+    guidance::Guidance, homepage::Homepage, information::Information, interaction::DrugInteraction,
+    prescription::PrescriptionAnalysis,
 };
 use dioxus::prelude::*;
 use modules::firebase_auth::AuthService;
@@ -12,6 +13,9 @@ use modules::firebase_auth::AuthService;
 pub enum Route {
     #[route("/")]
     Home {},
+
+    #[route("/test")]
+    SymptomChecker {},
 
     #[route("/:patient_id/")]
     Dashboard { patient_id: String },
