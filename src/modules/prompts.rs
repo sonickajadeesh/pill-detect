@@ -233,3 +233,42 @@ Keep the response concise and patient-friendly.
 
     Ok(result)
 }
+
+pub async fn symptom_guidance(
+    symptoms: &[String],
+    additional_symptoms: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let symptoms = symptoms.join(", ");
+
+    let prompt = format!(
+        r#"
+
+Provide concise, clear, and medically responsible general guidance based
+only on the information provided by the user.
+Do not diagnose the user.
+Do not claim certainty about the cause of symptoms.
+Do not invent medical information.
+Clearly mention when professional medical evaluation may be appropriate.
+If the symptoms could indicate an emergency, clearly advise the user to
+seek urgent medical attention.
+
+Selected symptoms:
+{symptoms}
+
+Additional information provided by the user:
+{additional_symptoms}
+
+Based on the information above:
+1. Briefly summarize what the user reported.
+2. Explain possible general considerations without diagnosing.
+3. Suggest reasonable next steps.
+4. Mention relevant warning signs that should prompt urgent medical care.
+
+Keep the response concise and easy to understand.
+"#
+    );
+
+    let response = prompt_ai(&prompt).await?;
+
+    Ok(response)
+}
