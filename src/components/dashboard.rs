@@ -4,6 +4,7 @@ use crate::{
     Route,
     modules::{
         api::clear_api_key,
+        database::get_patient_id,
         utilities::{calculate_age, sentence_case},
     },
 };
@@ -13,7 +14,7 @@ pub fn Dashboard(patient_id: String) -> Element {
     let navigator = use_navigator();
 
     // Load patient using patient_id
-    let patient = match crate::modules::database::get_patient_id(&patient_id) {
+    let patient = match get_patient_id(&patient_id) {
         Ok(patient) => patient,
         Err(err) => {
             eprintln!("Failed to load patient: {err}");
@@ -196,7 +197,7 @@ pub fn Dashboard(patient_id: String) -> Element {
                         }
                     }
 
-                    // Symptom Guidance
+                    // Seek guidance
                     button {
                         class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
 
@@ -214,11 +215,11 @@ pub fn Dashboard(patient_id: String) -> Element {
                         },
 
                         div { class: "mt-2 text-sm font-semibold text-gray-800 sm:text-base",
-                            "Symptom Guidance 💬"
+                            "Seek Guidance 💬"
                         }
 
                         p { class: "mt-1 text-xs text-gray-500 sm:text-sm",
-                            "Get guidance based on symptoms"
+                            "Get answers for health related questions"
                         }
                     }
 
@@ -245,6 +246,32 @@ pub fn Dashboard(patient_id: String) -> Element {
 
                         p { class: "mt-1 text-xs text-gray-500 sm:text-sm",
                             "Check potential drug interactions"
+                        }
+                    }
+
+                    // Symptom Check
+                    button {
+                        class: "rounded-lg border border-gray-200 bg-white px-4 py-5 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 sm:px-5 sm:py-6",
+
+                        r#type: "button",
+
+                        onclick: {
+                            let patient_id = patient_id.clone();
+
+                            move |_| {
+                                navigator
+                                    .push(Route::SymptomChecker {
+                                        patient_id: patient_id.clone(),
+                                    });
+                            }
+                        },
+
+                        div { class: "mt-2 text-sm font-semibold text-gray-800 sm:text-base",
+                            "Symptom Checker 🤒"
+                        }
+
+                        p { class: "mt-1 text-xs text-gray-500 sm:text-sm",
+                            "Check for symptoms and illnesses"
                         }
                     }
                 }

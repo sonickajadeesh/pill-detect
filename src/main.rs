@@ -14,8 +14,8 @@ pub enum Route {
     #[route("/")]
     Home {},
 
-    #[route("/test")]
-    SymptomChecker {},
+    #[route("/:patient_id/symptoms")]
+    SymptomChecker { patient_id: String },
 
     #[route("/:patient_id/")]
     Dashboard { patient_id: String },
@@ -50,7 +50,7 @@ fn Home() -> Element {
             AuthPage {
                 on_authenticated: move |authenticated_user| {
                     user.set(Some(authenticated_user));
-                }
+                },
             }
         }
     }
@@ -69,10 +69,7 @@ fn App() -> Element {
             </svg>",
         }
 
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/tailwind.css")
-        }
+        document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 
         Router::<Route> {}
 
