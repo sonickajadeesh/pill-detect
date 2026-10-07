@@ -165,9 +165,7 @@ pub fn Guidance(patient_id: String) -> Element {
         .unwrap_or_default();
 
     rsx! {
-        Navbar {
-            patient_id: patient_id.clone(),
-        }
+        Navbar { patient_id: patient_id.clone() }
 
         main { class: "flex h-[90vh] overflow-hidden bg-slate-50 p-6",
 
@@ -260,7 +258,7 @@ pub fn Guidance(patient_id: String) -> Element {
                 header { class: "mb-6 flex-shrink-0",
 
                     h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
-                        "Symptom Guidance 💬"
+                        "Seek Guidance 💬"
                     }
 
                     p { class: "mt-2 text-base text-slate-500",

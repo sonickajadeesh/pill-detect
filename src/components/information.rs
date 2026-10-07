@@ -487,7 +487,7 @@ pub fn Information(patient_id: String) -> Element {
 
                     div { class: "space-y-2",
 
-                        for (_, history) in history().iter().enumerate() {
+                        for (_ , history) in history().iter().enumerate() {
                             {
                                 let product = history.product.clone();
                                 let generic = history.generic.clone();

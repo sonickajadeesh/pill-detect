@@ -176,7 +176,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                         div { class: "flex flex-wrap gap-2",
 
-                            for (index, (generic, brand)) in selected_medicines.read().iter().enumerate() {
+                            for (index , (generic , brand)) in selected_medicines.read().iter().enumerate() {
                                 {
                                     let generic = generic.clone();
                                     let brand = brand.clone();
@@ -468,7 +468,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                     div { class: "space-y-3",
 
-                        for (index, history) in interaction_history.read().iter().enumerate() {
+                        for (index , history) in interaction_history.read().iter().enumerate() {
                             {
                                 let medicines = history.medicines.clone();
                                 let display_medicines =
