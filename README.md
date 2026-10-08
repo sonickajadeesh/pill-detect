@@ -8,8 +8,6 @@
 
 **Live Demo:** https://sonickajadeesh.github.io/pill-detect/
 
----
-
 ## Overview
 
 **Pill Detect** is a privacy-focused, browser-based AI medical assistant designed to help users identify medicines, understand medication information, analyze prescriptions, and access useful health-related guidance.
@@ -27,8 +25,6 @@ The application combines a **Rust + Dioxus frontend** with **Google Gemini** to 
 - 💾 Persistent browser-based storage
 
 The application is designed as an informational assistant and **is not a replacement for a qualified healthcare professional.**
-
----
 
 ## ✨ Features
 
@@ -49,8 +45,6 @@ Patients can be **created, edited, viewed, and deleted** from the main dashboard
 
 Patient records and associated histories are stored locally in the browser using `localStorage`.
 
----
-
 ### 💊 Medicine Identification from Image
 
 Upload an image of a medicine, tablet, capsule, or medicine packaging and use AI-powered image analysis to identify the medicine.
@@ -66,8 +60,6 @@ The feature can help identify:
 The identified medicine can then be used to retrieve additional medicine information.
 
 > **Note:** Image-based identification is intended as an informational aid. Images can be unclear, medicines can look similar, and AI identification may be incorrect. Always verify the medicine with its packaging, prescription, pharmacist, or healthcare professional before taking it.
-
----
 
 ### 💊 Medicine Information
 
@@ -85,8 +77,6 @@ Information may include:
 
 Medicine identification and research are handled through Gemini-powered prompts with instructions to use web search and reliable sources rather than guessing.
 
----
-
 ### 📋 Prescription Analysis
 
 Upload a prescription image and let the AI extract prescribed medications.
@@ -103,8 +93,6 @@ The extracted prescription can then be saved to the patient's profile for future
 
 **Medicine identification** focuses on identifying an individual medicine from an image, while **prescription analysis** focuses on extracting multiple medications and instructions from a prescription.
 
----
-
 ### 💬 Symptom Guidance
 
 The symptom guidance feature provides conversational medical information while maintaining conversation history for each patient.
@@ -117,8 +105,6 @@ The AI is instructed to:
 - Avoid inventing medical information
 - Clearly communicate uncertain information
 - Keep responses concise and medically responsible
-
----
 
 ### ⚠️ Drug Interaction Checker
 
@@ -134,8 +120,6 @@ The interaction checker considers:
 - Recommended action
 
 Interaction searches can also be stored in the patient's history.
-
----
 
 ## 🧠 AI Architecture
 
@@ -166,8 +150,6 @@ Dioxus Web App
         Google Gemini API
 ```
 
----
-
 ## 🔐 Privacy & Data Storage
 
 Pill Detect currently uses browser-local storage rather than a remote patient database.
@@ -177,8 +159,6 @@ Patient profiles, medicine search history, conversations, prescriptions, and int
 The Gemini API key is also stored locally in the browser after the user enters it. Users can clear or replace the stored key from the application.
 
 > **Important:** Do not use this application as a secure electronic health record system or enter sensitive medical information into an environment you do not trust.
-
----
 
 ## 🛠️ Tech Stack
 
@@ -196,8 +176,6 @@ The Gemini API key is also stored locally in the browser after the user enters i
 | **GitHub Pages**       | Deployment                       |
 
 The project currently targets the Dioxus web platform and uses Dioxus's router for patient-specific application routes.
-
----
 
 ## 📁 Project Structure
 
@@ -231,8 +209,6 @@ pill-detect/
 ├── clippy.toml
 └── tailwind.css
 ```
-
----
 
 ## 🚀 Getting Started
 
@@ -270,8 +246,6 @@ dx serve
 
 Then open the local address shown by Dioxus.
 
----
-
 ## 🔑 API Key Requirement
 
 Pill Detect requires a **Google Gemini API key** for its AI features.
@@ -285,8 +259,6 @@ You can obtain a Gemini API key from:
 https://aistudio.google.com/apikey
 
 > **Security note:** This project currently uses the Gemini API directly from the client-side application. For production healthcare use, API requests should be routed through a secure backend so that API credentials are not exposed to clients.
-
----
 
 ## 🧭 Application Routes
 
@@ -303,8 +275,6 @@ The application currently provides the following routes:
 
 These routes are defined using the Dioxus router.
 
----
-
 ## 🖥️ Deployment
 
 The project is configured for a Dioxus web build with the GitHub Pages base path:
@@ -319,7 +289,104 @@ The configured live application is:
 
 The repository also contains GitHub Actions configuration for the project.
 
----
+## 🔧 How to Setup
+
+**Step 1: Install package manager**
+
+Open PowerShell as Administrator and paste the following codeblock and press Enter.
+
+```
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+```
+
+**Step 2: Install Git, Rust and VSCode**
+
+Paste the following codeblock in PowerShell (Admin) and press Enter.
+
+```
+choco install -y git rustup.install vscode
+```
+
+**Step 3: Verify installation**
+
+Close and re-open PowerShell. Run the following commands one-by-one and ensure all tools are installed correctly.
+
+```
+git --version
+rustup --version
+rustc --version
+cargo --version
+code --version
+```
+
+**Step 4: Add Rust toolchain and target, and Dioxus CLI**
+
+Run the following commands one-by-one on PowerShell to install Rust toolchain, compilation target and Dioxus framework.
+
+```
+rustup default stable-x86_64-pc-windows-msvc
+rustup target add wasm32-unknown-unknown
+cargo install dioxus-cli
+```
+
+You can verify by running
+
+```
+rustup show
+rustup target list --installed
+dx --version
+```
+
+Expected outputs:
+
+```
+x86_64-pc-windows-msvc
+wasm32-unknown-unknown
+dioxus 0.7.10 (57d6794)
+```
+
+**Step 5: Clone repository**
+
+Run the following code on PowerShell to clone the repo.
+
+```
+git clone https://github.com/sonickajadeesh/pill-detect.git
+```
+
+To directly open the repo in VSCode, run
+
+```
+cd pill-detect
+code -r .
+```
+
+**Step 6: Setup development environment**
+
+Create `.env` in the root directory and paste the following text.
+
+You'll have to create a project in Google Firebase and get the API key.
+
+```
+FIREBASE_API_KEY=<your-own-api-key>
+```
+
+Press `Ctrl` + `Shift` + `~` to open the Terminal pane in VSCode.
+
+Paste this command to download the dependencies required to compile the project.
+
+```
+cargo check
+```
+
+To serve the project on Localhost, run
+
+```
+dx serve
+```
+
+**Step 7: Run WebApp**
+
+After the serving the WebApp on Localhost, it could be accessed from [127.0.0.1:8080/pill-detect](http://127.0.0.1:8080/pill-detect/).
 
 ## ⚠️ Disclaimer
 
