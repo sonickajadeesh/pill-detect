@@ -91,6 +91,15 @@ pub fn Navbar(patient_id: String) -> Element {
 
                             "Symptom Checker 🤒"
                         }
+
+                        Link {
+                            to: Route::FindDoctor {
+                                patient_id: patient_id.clone(),
+                            },
+                            class: "block rounded-md px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+
+                            "Find Doctors 🧑‍⚕️"
+                        }
                     }
                 }
             }
