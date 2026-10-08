@@ -47,6 +47,17 @@ pub struct DrugInteractionResponse {
     pub interactions: Vec<DrugInteraction>,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Doctor {
+    pub doctor_name: String,
+    pub specialty: String,
+    pub experience_years: String,
+    pub clinic_or_hospital: String,
+    pub location: String,
+    pub consultation_fee: String,
+    pub appointment_url: String,
+}
+
 pub async fn identify_medicine(
     term: &str,
 ) -> Result<MedicineIdentification, Box<dyn std::error::Error>> {
@@ -271,4 +282,35 @@ Keep the response concise and easy to understand.
     let response = prompt_ai(&prompt).await?;
 
     Ok(response)
+}
+
+pub async fn find_doctors(
+    doctor_type: &str,
+    location: &str,
+) -> Result<Vec<Doctor>, Box<dyn std::error::Error>> {
+    let prompt = format!(
+        r#"
+Find {doctor_type} doctors near {location} and return a valid JSON array matching this exact schema:
+[
+  {{
+    "doctor_name": "String",
+    "specialty": "String",
+    "experience_years": "String",
+    "clinic_or_hospital": "String",
+    "location": "String",
+    "consultation_fee": "String",
+    "appointment_url": "String"
+  }}
+]
+
+The appointment_url must be the direct page for the specific doctor, such as their doctor profile or booking page. Do not return the clinic/hospital main website URL. If a direct doctor page cannot be found, return an empty string.
+"#,
+        doctor_type = doctor_type,
+        location = location,
+    );
+
+    let response = prompt_ai(&prompt).await?;
+    let result: Vec<Doctor> = serde_json::from_str(&response)?;
+
+    Ok(result)
 }
