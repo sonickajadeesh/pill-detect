@@ -293,7 +293,7 @@ The repository also contains GitHub Actions configuration for the project.
 
 **Step 1: Install package manager**
 
-Open PowerShell as Administrator and paste the following codeblock and press Enter.
+Open PowerShell as Administrator and run the following command to install a package manager.
 
 ```
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
@@ -301,7 +301,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 
 **Step 2: Install Git, Rust and VSCode**
 
-Paste the following codeblock in PowerShell (Admin) and press Enter.
+Run the following command in PowerShell (as Administrator) to install the prerequisite packages.
 
 ```
 choco install -y git rustup.install vscode
@@ -309,7 +309,7 @@ choco install -y git rustup.install vscode
 
 **Step 3: Verify installation**
 
-Close and re-open PowerShell. Run the following commands one-by-one and ensure all tools are installed correctly.
+Close and re-open PowerShell normally. Run the following commands one-by-one and ensure all tools are installed correctly.
 
 ```
 git --version
@@ -321,7 +321,7 @@ code --version
 
 **Step 4: Add Rust toolchain and target, and Dioxus CLI**
 
-Run the following commands one-by-one on PowerShell to install Rust toolchain, compilation target and Dioxus framework.
+Run the following commands one-by-one on PowerShell to install Rust toolchain, compilation target and Dioxus.
 
 ```
 rustup default stable-x86_64-pc-windows-msvc
@@ -342,7 +342,7 @@ Expected outputs:
 ```
 x86_64-pc-windows-msvc
 wasm32-unknown-unknown
-dioxus 0.7.10 (57d6794)
+dioxus 0.7.10
 ```
 
 **Step 5: Clone repository**
@@ -360,19 +360,19 @@ cd pill-detect
 code -r .
 ```
 
+or, you can manually open the project folder from VSCode.
+
 **Step 6: Setup development environment**
 
-Create `.env` in the root directory and paste the following text.
-
-You'll have to create a project in Google Firebase and get the API key.
+Create `.env` file in the root directory and paste the following text.
 
 ```
 FIREBASE_API_KEY=<your-own-api-key>
 ```
 
-Press `Ctrl` + `Shift` + `~` to open the Terminal pane in VSCode.
+You'll have to create a project in Google Firebase and get the API key.
 
-Paste this command to download the dependencies required to compile the project.
+Press `Ctrl` + `Shift` + `~` to open the Terminal pane in VSCode. Paste this command in the Terminal to download the dependencies required to compile the project.
 
 ```
 cargo check
