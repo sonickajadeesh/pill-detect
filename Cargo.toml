@@ -9,6 +9,7 @@ base64 = "0.23.1"
 chrono = "0.4.45"
 dioxus = { version = "0.7.10", features = ["router"] }
 dioxus-html = "0.7.10"
+dioxus-sdk-geolocation = "0.7.0"
 gloo-storage = "0.4.0"
 js-sys = "0.3.104"
 pulldown-cmark = "0.13.4"
