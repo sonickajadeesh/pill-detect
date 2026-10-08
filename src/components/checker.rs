@@ -73,16 +73,12 @@ pub fn SymptomChecker(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        div { class: "relative flex min-h-[90vh] flex-col items-center px-5 py-10",
+        main { class: "relative flex min-h-[90vh] flex-col items-center px-6 py-6",
 
-            // Page heading
-            div { class: "mb-8 text-center",
+            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Symptom Guidance 🤒" }
 
-                h2 { class: "text-xl font-semibold tracking-tight text-gray-900",
-                    "What symptoms are you experiencing?"
-                }
-
-                p { class: "mt-1 text-sm text-gray-500", "Select an area of the body to get started." }
+            p { class: "mb-12 text-base text-slate-500",
+                "What symptoms are you experiencing? Select an area on the body to get started."
             }
 
             // Main content
