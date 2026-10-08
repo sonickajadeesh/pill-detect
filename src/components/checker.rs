@@ -22,7 +22,7 @@ fn MarkdownMessage(content: String) -> Element {
 
 #[component]
 pub fn SymptomChecker(patient_id: String) -> Element {
-    let mut selected = use_signal(|| None::<BodyParts>);
+    let mut selected = use_signal(|| Some(BodyParts::Common));
     let mut selected_symptoms = use_signal(Vec::<String>::new);
     let mut additional_symptoms = use_signal(String::new);
 
@@ -34,6 +34,8 @@ pub fn SymptomChecker(patient_id: String) -> Element {
 
     // Keep this list in the same order as your body map.
     let body_parts = vec![
+        BodyParts::Common,
+        BodyParts::Skin,
         BodyParts::Scalp,
         BodyParts::Forehead,
         BodyParts::Eyes,
@@ -56,6 +58,8 @@ pub fn SymptomChecker(patient_id: String) -> Element {
         BodyParts::Abdomen,
         BodyParts::Pelvis,
         BodyParts::Genitals,
+        BodyParts::Back,
+        BodyParts::Buttocks,
         BodyParts::Thighs,
         BodyParts::Knees,
         BodyParts::LowerLegs,
@@ -106,7 +110,7 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                         div { class: "mb-6",
 
                             p { class: "mb-2 block text-sm font-medium text-gray-700",
-                                "Select symptoms for your:"
+                                "Select symptoms for"
                             }
 
                             div { class: "relative",
