@@ -324,7 +324,8 @@ code --version
 Run the following commands one-by-one on PowerShell to install Rust toolchain, compilation target and Dioxus.
 
 ```
-rustup default stable-x86_64-pc-windows-msvc
+rustup toolchain install stable-x86_64-pc-windows-gnu
+rustup default stable-x86_64-pc-windows-gnu
 rustup target add wasm32-unknown-unknown
 cargo install dioxus-cli
 ```
