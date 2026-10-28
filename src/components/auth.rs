@@ -85,27 +85,16 @@ pub fn AuthPage(props: AuthPageProps) -> Element {
                         onsubmit: move |event| {
                             event.prevent_default();
 
-                            let email_value =
-                                email.read().trim().to_string();
-
-                            let password_value =
-                                password.read().clone();
-
-                            if email_value.is_empty()
-                                || password_value.is_empty()
-                            {
+                            let email_value = email.read().trim().to_string();
+                            let password_value = password.read().clone();
+                            if email_value.is_empty() || password_value.is_empty() {
                                 error.set(Some("Please enter your email and password.".to_string()));
                                 return;
                             }
-
-                            if sign_up
-                                && password_value
-                                    != *confirm_password.read()
-                            {
+                            if sign_up && password_value != *confirm_password.read() {
                                 error.set(Some("Passwords do not match.".to_string()));
                                 return;
                             }
-
                             error.set(None);
                             success.set(None);
                             auth_action.call((email_value, password_value, sign_up));

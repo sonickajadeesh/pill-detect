@@ -186,20 +186,17 @@ pub fn Information(patient_id: String) -> Element {
                                 let mime_type = match file.name().rsplit('.').next() {
                                     Some("png") | Some("PNG") => "image/png",
                                     Some("webp") | Some("WEBP") => "image/webp",
-                                    Some("jpg") | Some("JPG")
-                                    | Some("jpeg") | Some("JPEG") => "image/jpeg",
+
+                                    Some("jpg") | Some("JPG") | Some("jpeg") | Some("JPEG") => "image/jpeg",
                                     _ => "image/jpeg",
                                 };
-
                                 searching.set(true);
                                 researching.set(false);
                                 error.set(None);
                                 medicine.set(None);
                                 information.set(None);
                                 from_history.set(false);
-
                                 let patient_id = image_patient_id.clone();
-
                                 spawn(async move {
                                     let result = match read_file_bytes(&file).await {
                                         Ok(bytes) => identify_medicine_image(&bytes, mime_type).await,
@@ -213,9 +210,7 @@ pub fn Information(patient_id: String) -> Element {
                                             {
                                                 let product_name = result.product;
                                                 let generic_name = result.generic;
-
                                                 search_term.set(product_name.clone());
-
                                                 medicine
                                                     .set(Some((product_name.clone(), generic_name.clone())));
                                                 researching.set(true);
@@ -223,7 +218,6 @@ pub fn Information(patient_id: String) -> Element {
                                                     Ok(info) => {
                                                         information.set(Some(info));
                                                         researching.set(false);
-
                                                         let search = SearchHistory {
                                                             product: product_name,
                                                             generic: generic_name,
@@ -234,19 +228,16 @@ pub fn Information(patient_id: String) -> Element {
                                                                     Ok(updated_history) => {
                                                                         history.set(updated_history);
                                                                     }
-
                                                                     Err(err) => {
                                                                         eprintln!("Failed to reload search history: {err}");
                                                                     }
                                                                 }
                                                             }
-
                                                             Err(err) => {
                                                                 eprintln!("Failed to save search history: {err}");
                                                             }
                                                         }
                                                     }
-
                                                     Err(err) => {
                                                         researching.set(false);
                                                         error.set(Some(err.to_string()));
@@ -487,7 +478,7 @@ pub fn Information(patient_id: String) -> Element {
 
                     div { class: "space-y-2",
 
-                        for (_ , history) in history().iter().enumerate() {
+                        for (_, history) in history().iter().enumerate() {
                             {
                                 let product = history.product.clone();
                                 let generic = history.generic.clone();

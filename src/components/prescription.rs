@@ -398,28 +398,20 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                         if let Some(file) = event.files().first() {
                                             let file = file.clone();
 
-                                            let mime_type = match file
-                                                .name()
-                                                .rsplit('.')
-                                                .next()
-                                            {
+                                            let mime_type = match file.name().rsplit('.').next() {
                                                 Some("png") | Some("PNG") => "image/png",
                                                 Some("webp") | Some("WEBP") => "image/webp",
-                                                Some("jpg") | Some("JPG")
-                                                | Some("jpeg") | Some("JPEG") => "image/jpeg",
+                                                Some("jpg") | Some("JPG") | Some("jpeg") | Some("JPEG") => "image/jpeg",
                                                 _ => "image/jpeg",
                                             };
-
                                             selected_file.set(Some(file.clone()));
                                             analyzing.set(true);
                                             error_message.set(None);
-
                                             spawn(async move {
                                                 let result = match read_file_bytes(&file).await {
                                                     Ok(bytes) => analyze_prescription(&bytes, mime_type).await,
                                                     Err(err) => Err(err.into()),
                                                 };
-
                                                 match result {
                                                     Ok(analysis) => {
                                                         prescription_text.set(format_prescription(&analysis));
