@@ -114,7 +114,7 @@ Return JSON only: {{"uses":"","dosage":"","side_effects":"","warnings":"","presc
     Ok(information)
 }
 
-pub async fn guidance(conversation: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn seek_guidance(conversation: &str) -> Result<String, Box<dyn std::error::Error>> {
     let prompt = format!(
         r#"
 Converse naturally, using prior context for follow-ups.
@@ -245,7 +245,7 @@ Keep the response concise and patient-friendly.
     Ok(result)
 }
 
-pub async fn symptom_guidance(
+pub async fn symptom_checker(
     symptoms: &[String],
     additional_symptoms: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
@@ -254,14 +254,10 @@ pub async fn symptom_guidance(
     let prompt = format!(
         r#"
 
-Provide concise, clear, and medically responsible general guidance based
-only on the information provided by the user.
-Do not diagnose the user.
-Do not claim certainty about the cause of symptoms.
-Do not invent medical information.
+Provide concise, clear, and medically responsible general guidance based only on the information provided by the user.
+Do not diagnose the user. Do not claim certainty about the cause of symptoms. Do not invent medical information.
 Clearly mention when professional medical evaluation may be appropriate.
-If the symptoms could indicate an emergency, clearly advise the user to
-seek urgent medical attention.
+If the symptoms could indicate an emergency, clearly advise the user to seek urgent medical attention.
 
 Selected symptoms:
 {symptoms}

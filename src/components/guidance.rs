@@ -4,7 +4,7 @@ use crate::{
     components::navbar::Navbar,
     modules::{
         database::{Chat, Message, MessageRole, add_chat, delete_chat, get_chats, update_chat},
-        prompts::guidance,
+        prompts::seek_guidance,
         utilities::markdown_to_html,
     },
 };
@@ -132,7 +132,7 @@ pub fn Guidance(patient_id: String) -> Element {
                 .collect::<Vec<_>>()
                 .join("\n\n");
 
-            match guidance(&conversation).await {
+            match seek_guidance(&conversation).await {
                 Ok(result) => {
                     let mut all_chats = chats.write();
 
@@ -211,16 +211,13 @@ pub fn Guidance(patient_id: String) -> Element {
                                     move |_| {
                                         match delete_chat(&patient_id, chat_id) {
                                             Ok(()) => {
-                                                chats
-                                                    .write()
-                                                    .retain(|chat| chat.id != chat_id);
 
+                                                chats.write().retain(|chat| chat.id != chat_id);
                                                 if active_chat() == Some(chat_id) {
                                                     active_chat.set(None);
                                                     input.set(String::new());
                                                 }
                                             }
-
                                             Err(err) => {
                                                 error.set(Some(err));
                                             }
