@@ -1,4 +1,3 @@
-use chrono::Local;
 use dioxus::prelude::*;
 use dioxus_html::FileData;
 
@@ -10,7 +9,7 @@ use crate::{
             update_prescription,
         },
         prompts::analyze_prescription,
-        utilities::{format_date, format_prescription, read_file_bytes},
+        utilities::{format_prescription, read_file_bytes},
     },
 };
 
@@ -22,7 +21,6 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
     let mut reason = use_signal(String::new);
     let mut prescription_text = use_signal(String::new);
-    let mut expiry_date = use_signal(String::new);
     let mut error_message = use_signal(|| None::<String>);
 
     let mut selected_file = use_signal(|| None::<FileData>);
@@ -43,7 +41,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
     let mut reset_form = move || {
         reason.set(String::new());
         prescription_text.set(String::new());
-        expiry_date.set(String::new());
+        selected_file.set(None);
         editing_id.set(None);
         error_message.set(None);
     };
@@ -57,7 +55,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
         editing_id.set(Some(prescription.id));
         reason.set(prescription.reason);
         prescription_text.set(prescription.prescription_text);
-        expiry_date.set(prescription.expiry_date);
+        selected_file.set(None);
         error_message.set(None);
         show_form.set(true);
     };
@@ -73,7 +71,6 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
         move |_| {
             let reason_value = reason().trim().to_string();
             let prescription_text_value = prescription_text().trim().to_string();
-            let expiry_date_value = expiry_date().trim().to_string();
 
             if reason_value.is_empty() {
                 error_message.set(Some("Please enter a reason.".to_string()));
@@ -85,38 +82,19 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                 return;
             }
 
-            if expiry_date_value.is_empty() {
-                error_message.set(Some("Please select an expiry date.".to_string()));
-                return;
-            }
-
             let result = match editing_id() {
-                Some(id) => {
-                    let created_at = prescriptions()
-                        .iter()
-                        .find(|prescription| prescription.id == id)
-                        .map(|prescription| prescription.created_at.clone())
-                        .unwrap_or_default();
-
-                    update_prescription(
-                        &patient_id,
-                        Prescription {
-                            id,
-                            reason: reason_value,
-                            prescription_text: prescription_text_value,
-                            created_at,
-                            expiry_date: expiry_date_value,
-                        },
-                    )
-                }
+                Some(id) => update_prescription(
+                    &patient_id,
+                    Prescription {
+                        id,
+                        reason: reason_value,
+                        prescription_text: prescription_text_value,
+                        expired: false,
+                    },
+                ),
 
                 None => {
                     let id = format!("{}-{}", js_sys::Date::now() as u64, prescriptions().len());
-
-                    let created_at = js_sys::Date::new_0()
-                        .to_iso_string()
-                        .as_string()
-                        .unwrap_or_default();
 
                     add_prescription(
                         &patient_id,
@@ -124,27 +102,23 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                             id,
                             reason: reason_value,
                             prescription_text: prescription_text_value,
-                            created_at,
-                            expiry_date: expiry_date_value,
+                            expired: false,
                         },
                     )
                 }
             };
 
             match result {
-                Ok(_) => {
-                    match get_prescriptions(&patient_id) {
-                        Ok(data) => prescriptions.set(data),
-                        Err(err) => {
-                            error_message.set(Some(err));
-                            return;
-                        }
+                Ok(_) => match get_prescriptions(&patient_id) {
+                    Ok(data) => {
+                        prescriptions.set(data);
+                        show_form.set(false);
+                        reset_form();
                     }
-
-                    show_form.set(false);
-                    reset_form();
-                }
-
+                    Err(err) => {
+                        error_message.set(Some(err));
+                    }
+                },
                 Err(err) => {
                     error_message.set(Some(err));
                 }
@@ -152,19 +126,12 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
         }
     };
 
-    let today = Local::now().format("%Y-%m-%d").to_string();
+    // Expiration is controlled exclusively by the expired boolean.
+    let active_prescriptions: Vec<Prescription> =
+        prescriptions().into_iter().filter(|p| !p.expired).collect();
 
-    let active_prescriptions: Vec<Prescription> = prescriptions()
-        .iter()
-        .filter(|prescription| prescription.expiry_date >= today)
-        .cloned()
-        .collect();
-
-    let expired_prescriptions: Vec<Prescription> = prescriptions()
-        .iter()
-        .filter(|prescription| prescription.expiry_date < today)
-        .cloned()
-        .collect();
+    let expired_prescriptions: Vec<Prescription> =
+        prescriptions().into_iter().filter(|p| p.expired).collect();
 
     rsx! {
         Navbar { patient_id: patient_id.clone() }
@@ -175,6 +142,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
                 div {
                     h1 { class: "text-2xl font-semibold text-gray-900", "Prescription Analysis 📋" }
+
                     p { class: "mt-1 text-sm text-gray-500", "View and manage patient prescriptions." }
                 }
 
@@ -187,6 +155,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
             if prescriptions().is_empty() {
                 div { class: "rounded-xl border border-dashed border-gray-300 px-6 py-12 text-center",
+
                     p { class: "text-sm text-gray-500", "No prescriptions have been added." }
                 }
             } else {
@@ -206,19 +175,37 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                         key: "{prescription.id}",
                                         class: "rounded-xl border border-gray-200 bg-white p-5 shadow-sm",
 
-                                        div { class: "flex items-start justify-between gap-4",
+                                        div { class: "flex flex-wrap items-start justify-between gap-4",
 
-                                            div {
-                                                h2 { class: "font-semibold text-gray-900",
-                                                    "{prescription.reason}"
-                                                }
-
-                                                p { class: "mt-1 text-xs text-gray-500",
-                                                    "Created: {format_date(&prescription.created_at)}"
-                                                }
+                                            h2 { class: "font-semibold text-gray-900",
+                                                "{prescription.reason}"
                                             }
 
-                                            div { class: "flex gap-2",
+                                            div { class: "flex flex-wrap gap-2",
+                                                // Manually expire the prescription.
+                                                button {
+                                                    class: "rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-yellow-50 hover:text-yellow-600",
+
+                                                    onclick: {
+                                                        let patient_id = patient_id.clone();
+                                                        let mut updated = prescription.clone();
+
+                                                        move |_| {
+                                                            updated.expired = true;
+                                                            match update_prescription(&patient_id, updated.clone()) {
+                                                                Ok(_) => {
+                                                                    match get_prescriptions(&patient_id) {
+                                                                        Ok(data) => prescriptions.set(data),
+                                                                        Err(err) => error_message.set(Some(err)),
+                                                                    }
+                                                                }
+                                                                Err(err) => error_message.set(Some(err)),
+                                                            }
+                                                        }
+                                                    },
+
+                                                    "Set as Expired"
+                                                }
 
                                                 button {
                                                     class: "rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100",
@@ -235,7 +222,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                                 }
 
                                                 button {
-                                                    class: "rounded-md px-3 py-1.5 text-sm text-red-600 hover:bg-red-50",
+                                                    class: "rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-red-100 hover:text-red-600",
 
                                                     onclick: {
                                                         let patient_id = patient_id.clone();
@@ -246,15 +233,10 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                                                 Ok(_) => {
                                                                     match get_prescriptions(&patient_id) {
                                                                         Ok(data) => prescriptions.set(data),
-                                                                        Err(err) => {
-                                                                            error_message.set(Some(err));
-                                                                        }
+                                                                        Err(err) => error_message.set(Some(err)),
                                                                     }
                                                                 }
-
-                                                                Err(err) => {
-                                                                    error_message.set(Some(err));
-                                                                }
+                                                                Err(err) => error_message.set(Some(err)),
                                                             }
                                                         }
                                                     },
@@ -264,19 +246,10 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                             }
                                         }
 
-                                        div { class: "mt-4 rounded-lg bg-gray-100 p-4",
+                                        div { class: "mt-2 rounded-lg bg-gray-100 p-4",
 
                                             p { class: "whitespace-pre-wrap text-sm leading-6 text-gray-800",
                                                 "{prescription.prescription_text}"
-                                            }
-                                        }
-
-                                        div { class: "mt-4 flex items-center gap-1 text-sm",
-
-                                            span { class: "text-gray-500", "Expires:" }
-
-                                            span { class: "text-gray-900",
-                                                "{format_date(&prescription.expiry_date)}"
                                             }
                                         }
                                     }
@@ -288,7 +261,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                     // Expired prescriptions
                     if !expired_prescriptions.is_empty() {
                         section {
-                            h2 { class: "mb-4 text-lg font-semibold text-gray-9 00",
+                            h2 { class: "mb-4 text-lg font-semibold text-gray-900",
                                 "Expired Prescriptions"
                             }
 
@@ -297,61 +270,70 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                 for prescription in expired_prescriptions {
                                     div {
                                         key: "{prescription.id}",
-                                        class: "rounded-xl border border-gray-200 bg-gray-50 p-5",
+                                        class: "rounded-xl border border-gray-200 bg-gray-100 p-5",
 
-                                        div { class: "flex items-start justify-between gap-4",
+                                        div { class: "flex flex-wrap items-start justify-between gap-4",
 
-                                            div {
-                                                h2 { class: "font-semibold text-gray-600",
-                                                    "{prescription.reason}"
-                                                }
-
-                                                p { class: "mt-1 text-xs text-gray-400",
-                                                    "Created: {format_date(&prescription.created_at)}"
-                                                }
+                                            h2 { class: "font-semibold text-gray-600",
+                                                "{prescription.reason}"
                                             }
 
-                                            button {
-                                                class: "rounded-md px-3 py-1.5 text-sm text-red-600 hover:bg-red-100",
+                                            div { class: "flex flex-wrap gap-2",
 
-                                                onclick: {
-                                                    let patient_id = patient_id.clone();
-                                                    let prescription_id = prescription.id.clone();
+                                                // Reactivate the prescription manually.
+                                                button {
+                                                    class: "rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700",
 
-                                                    move |_| {
-                                                        match delete_prescription(&patient_id, &prescription_id) {
-                                                            Ok(_) => {
-                                                                match get_prescriptions(&patient_id) {
-                                                                    Ok(data) => prescriptions.set(data),
-                                                                    Err(err) => {
-                                                                        error_message.set(Some(err));
+                                                    onclick: {
+                                                        let patient_id = patient_id.clone();
+                                                        let mut updated = prescription.clone();
+
+                                                        move |_| {
+                                                            updated.expired = false;
+                                                            match update_prescription(&patient_id, updated.clone()) {
+                                                                Ok(_) => {
+                                                                    match get_prescriptions(&patient_id) {
+                                                                        Ok(data) => prescriptions.set(data),
+                                                                        Err(err) => error_message.set(Some(err)),
                                                                     }
                                                                 }
-                                                            }
-                                                            Err(err) => {
-                                                                error_message.set(Some(err));
+                                                                Err(err) => error_message.set(Some(err)),
                                                             }
                                                         }
-                                                    }
-                                                },
+                                                    },
 
-                                                "Delete"
+                                                    "Set as Active"
+                                                }
+
+                                                button {
+                                                    class: "rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-red-100 hover:text-red-600",
+
+                                                    onclick: {
+                                                        let patient_id = patient_id.clone();
+                                                        let prescription_id = prescription.id.clone();
+
+                                                        move |_| {
+                                                            match delete_prescription(&patient_id, &prescription_id) {
+                                                                Ok(_) => {
+                                                                    match get_prescriptions(&patient_id) {
+                                                                        Ok(data) => prescriptions.set(data),
+                                                                        Err(err) => error_message.set(Some(err)),
+                                                                    }
+                                                                }
+                                                                Err(err) => error_message.set(Some(err)),
+                                                            }
+                                                        }
+                                                    },
+
+                                                    "Delete"
+                                                }
                                             }
                                         }
 
-                                        div { class: "mt-4 rounded-lg bg-white p-4",
+                                        div { class: "mt-2 rounded-lg bg-white p-4",
 
                                             p { class: "whitespace-pre-wrap text-sm leading-6 text-gray-600",
                                                 "{prescription.prescription_text}"
-                                            }
-                                        }
-
-                                        div { class: "mt-4 flex items-center gap-1 text-sm",
-
-                                            span { class: "text-gray-400", "Expired:" }
-
-                                            span { class: "text-gray-600",
-                                                "{format_date(&prescription.expiry_date)}"
                                             }
                                         }
                                     }
@@ -362,12 +344,12 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                 }
             }
 
+            // Add / edit form
             if show_form() {
                 div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4",
 
                     div { class: "w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl",
 
-                        // Header
                         div { class: "flex items-center justify-between",
 
                             h2 { class: "text-lg font-semibold text-gray-900",
@@ -386,7 +368,6 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                             }
                         }
 
-                        // Form
                         div { class: "mt-6 space-y-5",
 
                             div {
@@ -399,9 +380,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                     r#type: "text",
                                     placeholder: "e.g. Respiratory infection",
                                     value: "{reason}",
-                                    oninput: move |event| {
-                                        reason.set(event.value());
-                                    },
+                                    oninput: move |event| reason.set(event.value()),
                                 }
                             }
 
@@ -419,11 +398,15 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                         if let Some(file) = event.files().first() {
                                             let file = file.clone();
 
-                                            let mime_type = match file.name().rsplit('.').next() {
+                                            let mime_type = match file
+                                                .name()
+                                                .rsplit('.')
+                                                .next()
+                                            {
                                                 Some("png") | Some("PNG") => "image/png",
                                                 Some("webp") | Some("WEBP") => "image/webp",
-                                                Some("jpg") | Some("JPG") |
-                                                Some("jpeg") | Some("JPEG") => "image/jpeg",
+                                                Some("jpg") | Some("JPG")
+                                                | Some("jpeg") | Some("JPEG") => "image/jpeg",
                                                 _ => "image/jpeg",
                                             };
 
@@ -433,16 +416,14 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
                                             spawn(async move {
                                                 let result = match read_file_bytes(&file).await {
-                                                    Ok(bytes) => analyze_prescription(&bytes, &mime_type).await,
+                                                    Ok(bytes) => analyze_prescription(&bytes, mime_type).await,
                                                     Err(err) => Err(err.into()),
                                                 };
 
                                                 match result {
                                                     Ok(analysis) => {
-                                                        let formatted = format_prescription(&analysis);
-                                                        prescription_text.set(formatted);
+                                                        prescription_text.set(format_prescription(&analysis));
                                                     }
-
                                                     Err(err) => {
                                                         error_message
                                                             .set(
@@ -479,28 +460,10 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
                                 class: "min-h-32 w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
                                 placeholder: "e.g. Amoxicillin 3x day for 5 days",
                                 value: "{prescription_text}",
-                                oninput: move |event| {
-                                    prescription_text.set(event.value());
-                                },
-                            }
-
-                            div {
-                                label { class: "mb-2 block text-sm font-medium text-gray-700",
-                                    "Expiry date"
-                                }
-
-                                input {
-                                    class: "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
-                                    r#type: "date",
-                                    value: "{expiry_date}",
-                                    oninput: move |event| {
-                                        expiry_date.set(event.value());
-                                    },
-                                }
+                                oninput: move |event| prescription_text.set(event.value()),
                             }
                         }
 
-                        // Error + action
                         div { class: "mt-6",
 
                             if let Some(error) = error_message() {
@@ -511,6 +474,7 @@ pub fn PrescriptionAnalysis(patient_id: String) -> Element {
 
                             button {
                                 class: "w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700",
+                                disabled: analyzing(),
                                 onclick: save_prescription,
 
                                 if editing_id().is_some() {

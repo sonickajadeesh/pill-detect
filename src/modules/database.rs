@@ -59,8 +59,9 @@ pub struct Prescription {
     pub id: String,
     pub reason: String,
     pub prescription_text: String,
-    pub created_at: String,
-    pub expiry_date: String,
+
+    #[serde(default)]
+    pub expired: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

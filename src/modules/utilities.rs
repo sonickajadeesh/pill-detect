@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Local, NaiveDate};
+use chrono::{Datelike, Local, NaiveDate};
 use dioxus_html::FileData;
 use pulldown_cmark::{Parser, html};
 
@@ -101,18 +101,6 @@ pub fn markdown_to_html(markdown: &str) -> String {
     html::push_html(&mut html_output, parser);
 
     html_output
-}
-
-pub fn format_date(date: &str) -> String {
-    if let Ok(date_time) = DateTime::parse_from_rfc3339(date) {
-        return date_time.format("%d %b %Y").to_string();
-    }
-
-    if let Ok(date) = NaiveDate::parse_from_str(date, "%Y-%m-%d") {
-        return date.format("%d %b %Y").to_string();
-    }
-
-    date.to_string()
 }
 
 pub async fn read_file_bytes(file: &FileData) -> Result<Vec<u8>, String> {
