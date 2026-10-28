@@ -179,18 +179,6 @@ pub fn Information(patient_id: String) -> Element {
                                                     r#type: "button",
                                                     class: "block w-full px-4 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700",
 
-
-
-
-
-
-
-
-
-
-
-
-
                                                     onclick: move |_| {
                                                         search_term.set(name.clone());
                                                         suggestions.set(Vec::<String>::new());
@@ -559,85 +547,13 @@ pub fn Information(patient_id: String) -> Element {
 
                     div { class: "space-y-2",
 
-                        for (_ , history) in history().iter().enumerate() {
+                        for (_, history) in history().iter().enumerate() {
                             {
                                 let product = history.product.clone();
                                 let generic = history.generic.clone();
 
                                 rsx! {
                                     div { class: "flex flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                                         div {
                                             p { class: "text-sm font-medium text-slate-800", "{generic}" }

@@ -81,7 +81,13 @@ pub fn SymptomChecker(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        main { class: "relative flex min-h-[90vh] flex-col items-center px-6 py-6",
+        main {
+            class: "relative flex min-h-[90vh] flex-col items-center px-6 py-6",
+
+            onclick: move |_| {
+                organ_dropdown_open.set(false);
+                symptom_dropdown_open.set(false);
+            },
 
             h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Symptom Checker 🤒" }
 
@@ -117,7 +123,9 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                                 "Select symptoms for"
                             }
 
-                            div { class: "relative",
+                            div {
+                                class: "relative",
+                                onclick: move |event| event.stop_propagation(),
 
                                 button {
                                     r#type: "button",
@@ -225,7 +233,9 @@ pub fn SymptomChecker(patient_id: String) -> Element {
 
                         // SYMPTOM SELECTOR
                         if let Some(part) = selected() {
-                            div { class: "relative",
+                            div {
+                                class: "relative",
+                                onclick: move |event| event.stop_propagation(),
 
                                 button {
                                     r#type: "button",
