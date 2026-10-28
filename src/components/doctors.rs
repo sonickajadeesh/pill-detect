@@ -33,6 +33,8 @@ pub fn FindDoctor(patient_id: String) -> Element {
         "Ophthalmologist",
     ];
 
+    let mut doctor_dropdown_open = use_signal(|| false);
+
     let search_doctors = move |_| {
         let selected_type = doctor_type();
         let selected_location = location();
@@ -85,22 +87,82 @@ pub fn FindDoctor(patient_id: String) -> Element {
                 div { class: "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm",
 
                     // Doctor type
-                    div {
+                    div { class: "relative",
+
                         label { class: "mb-1.5 block text-sm font-semibold text-slate-700",
                             "Doctor"
                         }
 
-                        select {
-                            class: "w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100",
+                        div { class: "relative",
 
-                            value: "{doctor_type()}",
+                            button {
+                                r#type: "button",
+                                class: "flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 text-left shadow-sm transition hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-100",
 
-                            onchange: move |event| {
-                                doctor_type.set(event.value());
-                            },
+                                onclick: move |_| {
+                                    doctor_dropdown_open.set(!doctor_dropdown_open());
+                                },
 
-                            for doctor in doctor_types {
-                                option { value: "{doctor}", "{doctor}" }
+                                span { class: "text-sm text-gray-900", "{doctor_type()}" }
+
+                                svg {
+                                    class: if doctor_dropdown_open() { "h-5 w-5 shrink-0 rotate-180 text-gray-400 transition-transform" } else { "h-5 w-5 shrink-0 text-gray-400 transition-transform" },
+                                    fill: "none",
+                                    view_box: "0 0 24 24",
+                                    stroke: "currentColor",
+
+                                    path {
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        stroke_width: "2",
+                                        d: "M19 9l-7 7-7-7",
+                                    }
+                                }
+                            }
+
+                            if doctor_dropdown_open() {
+                                // Backdrop: clicking anywhere outside closes the menu.
+                                div {
+                                    class: "fixed inset-0 z-40",
+                                    onclick: move |_| {
+                                        doctor_dropdown_open.set(false);
+                                    },
+                                }
+
+                                // Dropdown stays above the backdrop.
+                                div { class: "absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-lg",
+
+                                    for doctor in doctor_types {
+                                        button {
+                                            r#type: "button",
+
+                                            class: if doctor_type() == doctor { "flex w-full items-center justify-between rounded-xl bg-blue-50 px-4 py-3 text-left text-sm font-medium text-blue-700" } else { "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50" },
+
+                                            onclick: move |_| {
+                                                doctor_type.set(doctor.to_string());
+                                                doctor_dropdown_open.set(false);
+                                            },
+
+                                            span { "{doctor}" }
+
+                                            if doctor_type() == doctor {
+                                                svg {
+                                                    class: "h-5 w-5 text-blue-600",
+                                                    fill: "none",
+                                                    view_box: "0 0 24 24",
+                                                    stroke: "currentColor",
+
+                                                    path {
+                                                        stroke_linecap: "round",
+                                                        stroke_linejoin: "round",
+                                                        stroke_width: "2",
+                                                        d: "M5 13l4 4L19 7",
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

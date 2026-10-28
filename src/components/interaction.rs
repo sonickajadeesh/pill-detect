@@ -11,6 +11,8 @@ use crate::{
     },
 };
 
+const DRUGS: &str = include_str!("../../assets/drugs.txt");
+
 #[component]
 pub fn DrugInteraction(patient_id: String) -> Element {
     let mut medicine_input = use_signal(String::new);
@@ -21,6 +23,9 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
     let mut interaction_loading = use_signal(|| false);
     let mut interaction_results = use_signal(|| Option::<DrugInteractionResponse>::None);
+
+    let mut suggestions = use_signal(Vec::<String>::new);
+    let mut show_suggestions = use_signal(|| false);
 
     let mut interaction_history = use_signal(|| Vec::<InteractionHistory>::new());
 
@@ -53,7 +58,12 @@ pub fn DrugInteraction(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        main { class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
+        main {
+            class: "min-h-[90vh] max-w-[900px] mx-auto px-6 py-12",
+
+            onclick: move |_| {
+                show_suggestions.set(false);
+            },
 
             // Header
             h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
@@ -134,17 +144,72 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                         });
                     },
 
-                    input {
-                        class: "min-w-0 flex-1 rounded-[10px] border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-600/10",
+                    div {
+                        class: "relative min-w-0 flex-1",
 
-                        r#type: "text",
-                        placeholder: "e.g. Dolo 650",
-                        value: "{medicine_input}",
-                        disabled: loading(),
+                        onclick: move |event| event.stop_propagation(),
 
-                        oninput: move |event| {
-                            medicine_input.set(event.value());
-                        },
+                        input {
+                            class: "w-full rounded-[10px] border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-600/10",
+
+                            r#type: "text",
+                            placeholder: "e.g. Dolo 650",
+                            value: "{medicine_input}",
+                            autocomplete: "off",
+                            disabled: loading(),
+
+                            oninput: move |event| {
+                                let value = event.value();
+                                medicine_input.set(value.clone());
+
+                                let query = value.trim().to_lowercase();
+
+                                if query.is_empty() {
+                                    suggestions.set(Vec::new());
+                                    show_suggestions.set(false);
+                                } else {
+                                    let matches: Vec<String> = DRUGS
+                                        .lines()
+                                        .map(str::trim)
+                                        .filter(|name| {
+
+                                            !name.is_empty() && name.to_lowercase().starts_with(&query)
+                                        })
+                                        .take(10)
+                                        .map(str::to_string)
+                                        .collect();
+                                    suggestions.set(matches.clone());
+                                    show_suggestions.set(!matches.is_empty());
+                                }
+                            },
+                        }
+
+                        if show_suggestions() && !suggestions().is_empty() {
+                            div { class: "absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-[10px] border border-slate-200 bg-white py-1 shadow-lg",
+
+                                for name in suggestions().iter() {
+                                    {
+                                        let name = name.clone();
+
+                                        rsx! {
+                                            button {
+                                                key: "{name}",
+                                                r#type: "button",
+                                                class: "block w-full px-4 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700",
+
+                                                onclick: move |_| {
+                                                    medicine_input.set(name.clone());
+                                                    suggestions.set(Vec::new());
+                                                    show_suggestions.set(false);
+                                                },
+
+                                                "{name}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     button {
@@ -156,7 +221,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                         if loading() {
                             div { class: "h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" }
                         } else {
-                            "🔍︎"
+                            "🔍︎ Search"
                         }
                     }
                 }
@@ -176,7 +241,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                         div { class: "flex flex-wrap gap-2",
 
-                            for (index , (generic , brand)) in selected_medicines.read().iter().enumerate() {
+                            for (index, (generic, brand)) in selected_medicines.read().iter().enumerate() {
                                 {
                                     let generic = generic.clone();
                                     let brand = brand.clone();
@@ -202,10 +267,8 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                                 aria_label: "Remove {generic}",
 
                                                 onclick: move |_| {
-                                                    selected_medicines
-                                                        .write()
-                                                        .remove(index);
 
+                                                    selected_medicines.write().remove(index);
                                                     interaction_results.set(None);
                                                 },
 
@@ -233,49 +296,35 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                 let patient_id = check_patient_id.clone();
 
                                 move |_| {
-                                    let medicines: Vec<String> =
-                                        selected_medicines
+
+                                    let medicines: Vec<String> = selected_medicines
                                         .read()
                                         .iter()
                                         .map(|(generic, _)| generic.clone())
                                         .collect();
-
                                     let patient_id = patient_id.clone();
-
                                     interaction_loading.set(true);
                                     interaction_results.set(None);
-
                                     spawn(async move {
-                                        let patient =
-                                            match get_patient_id(&patient_id) {
+                                        let patient = match get_patient_id(&patient_id) {
                                             Ok(patient) => patient,
-
                                             Err(err) => {
                                                 eprintln!("Failed to load patient: {err}");
                                                 interaction_loading.set(false);
                                                 return;
                                             }
                                         };
-
-                                        let allergies =
-                                            if patient.allergies.trim().is_empty()
-                                            {
+                                        let allergies = if patient.allergies.trim().is_empty() {
                                             Vec::new()
                                         } else {
                                             vec![patient.allergies]
                                         };
-
-                                        let medical_conditions =
-                                            if patient
-                                                .medical_conditions
-                                                .trim()
-                                                .is_empty()
+                                        let medical_conditions = if patient.medical_conditions.trim().is_empty()
                                         {
                                             Vec::new()
                                         } else {
                                             vec![patient.medical_conditions]
                                         };
-
                                         match check_drug_interactions(
                                                 medicines.clone(),
                                                 allergies,
@@ -284,34 +333,26 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                             .await
                                         {
                                             Ok(result) => {
-                                                if let Err(err) =
-                                                    add_interaction_history(
+                                                if let Err(err) = add_interaction_history(
                                                     &patient_id,
                                                     medicines,
-                                                )
-                                                {
+                                                ) {
                                                     eprintln!("Failed to save interaction history: {err}");
                                                 }
                                                 match get_interaction_history(&patient_id) {
                                                     Ok(history) => {
-                                                        interaction_history
-                                                            .set(history);
+                                                        interaction_history.set(history);
                                                     }
-
                                                     Err(err) => {
                                                         eprintln!("Failed to refresh interaction history: {err}");
                                                     }
                                                 }
-
-                                                interaction_results
-                                                    .set(Some(result));
+                                                interaction_results.set(Some(result));
                                             }
-
                                             Err(err) => {
                                                 eprintln!("Drug interaction check failed: {err}");
                                             }
                                         }
-
                                         interaction_loading.set(false);
                                     });
                                 }
@@ -365,11 +406,9 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                             for interaction in results.interactions {
                                 {
-                                    let severity =
-                                        interaction.severity.to_lowercase();
 
-                                    let (card_class, badge_class) =
-                                        match severity.as_str() {
+                                    let severity = interaction.severity.to_lowercase();
+                                    let (card_class, badge_class) = match severity.as_str() {
                                         "high" => ("border-red-200 bg-red-50", "bg-red-100 text-red-700"),
                                         "moderate" | "medium" => {
                                             ("border-yellow-200 bg-yellow-50", "bg-yellow-100 text-yellow-800")
@@ -451,10 +490,9 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                 move |_| {
                                     match clear_interaction_history(&patient_id) {
                                         Ok(_) => {
-                                            interaction_history
-                                                .set(Vec::new());
-                                        }
 
+                                            interaction_history.set(Vec::new());
+                                        }
                                         Err(err) => {
                                             eprintln!("Failed to clear interaction history: {err}");
                                         }
@@ -468,12 +506,11 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
                     div { class: "space-y-3",
 
-                        for (index , history) in interaction_history.read().iter().enumerate() {
+                        for (index, history) in interaction_history.read().iter().enumerate() {
                             {
                                 let medicines = history.medicines.clone();
-                                let display_medicines =
-                                    medicines.join(" • ");
 
+                                let display_medicines = medicines.join(" + ");
                                 rsx! {
                                     div {
                                         key: "{index}",
@@ -491,9 +528,8 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                             r#type: "button",
 
                                             onclick: {
-                                                let medicines =
-                                                    medicines.clone();
 
+                                                let medicines = medicines.clone();
                                                 move |_| {
                                                     selected_medicines
                                                         .set(
@@ -502,9 +538,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
                                                                 .map(|medicine| { (medicine.clone(), String::new()) })
                                                                 .collect(),
                                                         );
-
-                                                    interaction_results
-                                                        .set(None);
+                                                    interaction_results.set(None);
                                                 }
                                             },
 

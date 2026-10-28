@@ -11,6 +11,8 @@ use crate::{
     },
 };
 
+const DRUGS: &str = include_str!("../../assets/drugs.txt");
+
 #[component]
 pub fn Information(patient_id: String) -> Element {
     let mut search_term = use_signal(String::new);
@@ -31,6 +33,10 @@ pub fn Information(patient_id: String) -> Element {
 
     // Clone the patient ID for the history-loading effect.
     let history_patient_id = patient_id.clone();
+
+    // Drug suggestions
+    let mut suggestions = use_signal(Vec::<String>::new);
+    let mut show_suggestions = use_signal(|| false);
 
     // Load search history for the selected patient.
     use_effect(move || match get_search_history(&history_patient_id) {
@@ -55,7 +61,12 @@ pub fn Information(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        main { class: "mx-auto min-h-[90vh] max-w-[900px] px-6 py-12",
+        main {
+            class: "mx-auto min-h-[90vh] max-w-[900px] px-6 py-12",
+
+            onclick: move |_| {
+                show_suggestions.set(false);
+            },
 
             h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
                 "Medicine Information 🔎"
@@ -114,18 +125,74 @@ pub fn Information(patient_id: String) -> Element {
                     // Search controls
                     div { class: "flex min-w-0 flex-col gap-2.5 sm:flex-row",
 
-                        // Medicine search input
-                        input {
-                            class: "min-w-0 flex-1 rounded-[10px] border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-600/10",
+                        // Medicine search input + autocomplete
+                        div {
+                            class: "relative min-w-0 flex-1",
+                            onclick: move |event| event.stop_propagation(),
 
-                            r#type: "text",
-                            placeholder: "Type a medicine name",
-                            value: "{search_term}",
+                            input {
+                                class: "w-full min-w-0 rounded-[10px] border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-600/10",
 
-                            oninput: move |event| {
-                                search_term.set(event.value());
-                                from_history.set(false);
-                            },
+                                r#type: "text",
+                                placeholder: "Type a medicine name",
+                                value: "{search_term}",
+                                autocomplete: "off",
+
+                                oninput: move |event| {
+                                    let query = event.value();
+                                    search_term.set(query.clone());
+                                    from_history.set(false);
+
+                                    let query = query.trim().to_lowercase();
+
+                                    if query.is_empty() {
+                                        suggestions.set(Vec::<String>::new());
+                                        show_suggestions.set(false);
+                                    } else {
+                                        let matches: Vec<String> = DRUGS
+                                            .lines()
+                                            .map(str::trim)
+                                            .filter(|name| {
+
+                                                !name.is_empty() && name.to_lowercase().starts_with(&query)
+                                            })
+                                            .take(10)
+                                            .map(str::to_string)
+                                            .collect();
+                                        show_suggestions.set(!matches.is_empty());
+                                        suggestions.set(matches);
+                                    }
+                                },
+                            }
+
+                            // Autocomplete dropdown
+                            if show_suggestions() && !suggestions().is_empty() {
+                                div { class: "absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-[10px] border border-slate-200 bg-white py-1 shadow-lg",
+
+                                    for name in suggestions().iter() {
+                                        {
+                                            let name = name.clone();
+
+                                            rsx! {
+                                                button {
+                                                    key: "{name}",
+                                                    r#type: "button",
+                                                    class: "block w-full px-4 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700",
+
+                                                    onclick: move |_| {
+                                                        search_term.set(name.clone());
+                                                        suggestions.set(Vec::<String>::new());
+                                                        show_suggestions.set(false);
+                                                        from_history.set(false);
+                                                    },
+
+                                                    "{name}"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         // Search + Upload buttons
@@ -154,6 +221,8 @@ pub fn Information(patient_id: String) -> Element {
 
                                 onclick: move |_| {
                                     if !searching() && !researching() {
+                                        show_suggestions.set(false);
+
                                         document::eval(
                                             r#"document.getElementById("medicine-image-upload").click();"#,
                                         );
@@ -186,20 +255,17 @@ pub fn Information(patient_id: String) -> Element {
                                 let mime_type = match file.name().rsplit('.').next() {
                                     Some("png") | Some("PNG") => "image/png",
                                     Some("webp") | Some("WEBP") => "image/webp",
-                                    Some("jpg") | Some("JPG")
-                                    | Some("jpeg") | Some("JPEG") => "image/jpeg",
+
+                                    Some("jpg") | Some("JPG") | Some("jpeg") | Some("JPEG") => "image/jpeg",
                                     _ => "image/jpeg",
                                 };
-
                                 searching.set(true);
                                 researching.set(false);
                                 error.set(None);
                                 medicine.set(None);
                                 information.set(None);
                                 from_history.set(false);
-
                                 let patient_id = image_patient_id.clone();
-
                                 spawn(async move {
                                     let result = match read_file_bytes(&file).await {
                                         Ok(bytes) => identify_medicine_image(&bytes, mime_type).await,
@@ -213,9 +279,7 @@ pub fn Information(patient_id: String) -> Element {
                                             {
                                                 let product_name = result.product;
                                                 let generic_name = result.generic;
-
                                                 search_term.set(product_name.clone());
-
                                                 medicine
                                                     .set(Some((product_name.clone(), generic_name.clone())));
                                                 researching.set(true);
@@ -223,7 +287,6 @@ pub fn Information(patient_id: String) -> Element {
                                                     Ok(info) => {
                                                         information.set(Some(info));
                                                         researching.set(false);
-
                                                         let search = SearchHistory {
                                                             product: product_name,
                                                             generic: generic_name,
@@ -234,19 +297,16 @@ pub fn Information(patient_id: String) -> Element {
                                                                     Ok(updated_history) => {
                                                                         history.set(updated_history);
                                                                     }
-
                                                                     Err(err) => {
                                                                         eprintln!("Failed to reload search history: {err}");
                                                                     }
                                                                 }
                                                             }
-
                                                             Err(err) => {
                                                                 eprintln!("Failed to save search history: {err}");
                                                             }
                                                         }
                                                     }
-
                                                     Err(err) => {
                                                         researching.set(false);
                                                         error.set(Some(err.to_string()));
@@ -317,7 +377,7 @@ pub fn Information(patient_id: String) -> Element {
                             div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
 
                                 p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
-                                    "Uses"
+                                    "Uses 🩺"
                                 }
 
                                 p { class: "mt-1.5 text-sm leading-6 text-slate-700",
@@ -329,7 +389,7 @@ pub fn Information(patient_id: String) -> Element {
                             div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
 
                                 p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
-                                    "Dosage"
+                                    "Dosage 💊"
                                 }
 
                                 p { class: "mt-1.5 text-sm leading-6 text-slate-700",
@@ -341,7 +401,7 @@ pub fn Information(patient_id: String) -> Element {
                             div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
 
                                 p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
-                                    "Side Effects"
+                                    "Side Effects 🤒"
                                 }
 
                                 p { class: "mt-1.5 text-sm leading-6 text-slate-700",
@@ -353,7 +413,7 @@ pub fn Information(patient_id: String) -> Element {
                             div { class: "rounded-[12px] border border-slate-200 bg-slate-50 p-4",
 
                                 p { class: "text-xs font-semibold uppercase tracking-wide text-slate-400",
-                                    "Warnings"
+                                    "Warnings ⚠️"
                                 }
 
                                 p { class: "mt-1.5 text-sm leading-6 text-slate-700",
@@ -487,7 +547,7 @@ pub fn Information(patient_id: String) -> Element {
 
                     div { class: "space-y-2",
 
-                        for (_ , history) in history().iter().enumerate() {
+                        for (_, history) in history().iter().enumerate() {
                             {
                                 let product = history.product.clone();
                                 let generic = history.generic.clone();

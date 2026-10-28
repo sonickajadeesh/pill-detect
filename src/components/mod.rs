@@ -1,7 +1,7 @@
 pub mod auth;
 pub mod checker;
 pub mod dashboard;
-pub mod doctor;
+pub mod doctors;
 pub mod footer;
 pub mod guidance;
 pub mod homepage;

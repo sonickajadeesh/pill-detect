@@ -2,7 +2,7 @@ use crate::{
     components::navbar::Navbar,
     modules::{
         bodymap::{BodyMap, BodyParts},
-        prompts::symptom_guidance,
+        prompts::symptom_checker,
         utilities::markdown_to_html,
     },
 };
@@ -28,6 +28,9 @@ pub fn SymptomChecker(patient_id: String) -> Element {
 
     let mut organ_dropdown_open = use_signal(|| false);
     let mut symptom_dropdown_open = use_signal(|| false);
+
+    let mut body_part_search = use_signal(String::new);
+    let mut symptom_search = use_signal(String::new);
 
     let mut is_submitting = use_signal(|| false);
     let mut check_symptoms = use_signal(|| None::<String>);
@@ -70,6 +73,7 @@ pub fn SymptomChecker(patient_id: String) -> Element {
 
     let mut select_part = move |part: BodyParts| {
         selected.set(Some(part));
+        symptom_search.set(String::new());
         organ_dropdown_open.set(false);
         symptom_dropdown_open.set(false);
     };
@@ -77,9 +81,15 @@ pub fn SymptomChecker(patient_id: String) -> Element {
     rsx! {
         Navbar { patient_id: patient_id.clone() }
 
-        main { class: "relative flex min-h-[90vh] flex-col items-center px-6 py-6",
+        main {
+            class: "relative flex min-h-[90vh] flex-col items-center px-6 py-6",
 
-            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Symptom Guidance 🤒" }
+            onclick: move |_| {
+                organ_dropdown_open.set(false);
+                symptom_dropdown_open.set(false);
+            },
+
+            h1 { class: "text-[32px] font-bold tracking-tight text-slate-900", "Symptom Checker 🤒" }
 
             p { class: "mb-12 text-base text-slate-500",
                 "What symptoms are you experiencing? Select an area on the body to get started."
@@ -113,7 +123,9 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                                 "Select symptoms for"
                             }
 
-                            div { class: "relative",
+                            div {
+                                class: "relative",
+                                onclick: move |event| event.stop_propagation(),
 
                                 button {
                                     r#type: "button",
@@ -156,37 +168,55 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                                 if organ_dropdown_open() {
                                     div { class: "absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 shadow-lg",
 
+                                        // Search input
+                                        div { class: "border-b border-gray-100 p-2",
+                                            input {
+                                                r#type: "text",
+                                                class: "w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100",
+                                                placeholder: "Search body areas...",
+                                                value: "{body_part_search}",
+                                                oninput: move |event| {
+                                                    body_part_search.set(event.value());
+                                                },
+                                            }
+                                        }
+
+                                        // Filtered body parts
                                         div { class: "max-h-64 overflow-y-auto",
+                                            {
 
-                                            for part in body_parts.iter() {
-                                                {
-                                                    let part = *part;
-                                                    let is_selected = selected() == Some(part);
+                                                let query = body_part_search().trim().to_lowercase();
+                                                rsx! {
+                                                    for part in body_parts.iter().filter(|part| { part.label().to_lowercase().starts_with(&query) }) {
+                                                        {
+                                                            let part = *part;
 
-                                                    rsx! {
-                                                        button {
-                                                            r#type: "button",
+                                                            let is_selected = selected() == Some(part);
+                                                            rsx! {
+                                                                button {
+                                                                    r#type: "button",
+                                                                    class: if is_selected { "flex w-full items-center justify-between rounded-xl bg-blue-50 px-4 py-3 text-left text-sm font-medium text-blue-700" } else { "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50" },
 
-                                                            class: if is_selected { "flex w-full items-center justify-between rounded-xl bg-blue-50 px-4 py-3 text-left text-sm font-medium text-blue-700" } else { "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50" },
+                                                                    onclick: move |_| {
+                                                                        select_part(part);
+                                                                        body_part_search.set(String::new());
+                                                                    },
 
-                                                            onclick: move |_| {
-                                                                select_part(part);
-                                                            },
+                                                                    span { "{part.label()}" }
 
-                                                            span { "{part.label()}" }
-
-                                                            if is_selected {
-                                                                svg {
-                                                                    class: "h-5 w-5 text-blue-600",
-                                                                    fill: "none",
-                                                                    view_box: "0 0 24 24",
-                                                                    stroke: "currentColor",
-
-                                                                    path {
-                                                                        stroke_linecap: "round",
-                                                                        stroke_linejoin: "round",
-                                                                        stroke_width: "2",
-                                                                        d: "M5 13l4 4L19 7",
+                                                                    if is_selected {
+                                                                        svg {
+                                                                            class: "h-5 w-5 text-blue-600",
+                                                                            fill: "none",
+                                                                            view_box: "0 0 24 24",
+                                                                            stroke: "currentColor",
+                                                                            path {
+                                                                                stroke_linecap: "round",
+                                                                                stroke_linejoin: "round",
+                                                                                stroke_width: "2",
+                                                                                d: "M5 13l4 4L19 7",
+                                                                            }
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -197,12 +227,15 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                                         }
                                     }
                                 }
+
                             }
                         }
 
                         // SYMPTOM SELECTOR
                         if let Some(part) = selected() {
-                            div { class: "relative",
+                            div {
+                                class: "relative",
+                                onclick: move |event| event.stop_propagation(),
 
                                 button {
                                     r#type: "button",
@@ -249,50 +282,71 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                                 if symptom_dropdown_open() {
                                     div { class: "absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg",
 
+                                        // Autocomplete search
+                                        div { class: "border-b border-gray-100 p-3",
+                                            input {
+                                                r#type: "text",
+                                                class: "w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100",
+                                                placeholder: "Search symptoms...",
+                                                value: "{symptom_search}",
+                                                autofocus: true,
+                                                oninput: move |event| {
+                                                    symptom_search.set(event.value());
+                                                },
+                                            }
+                                        }
+
                                         div { class: "max-h-64 overflow-y-auto p-2",
+                                            {
 
-                                            for symptom in part.symptoms() {
-                                                {
-                                                    let symptom_str = symptom.to_string();
+                                                let query = symptom_search().trim().to_lowercase();
+                                                let matches: Vec<String> = part
+                                                    .symptoms()
+                                                    .iter()
+                                                    .filter(|symptom| { symptom.to_lowercase().contains(&query) })
+                                                    .map(|symptom| symptom.to_string())
+                                                    .collect();
+                                                rsx! {
+                                                    if matches.is_empty() {
+                                                        div { class: "px-4 py-6 text-center text-sm text-gray-500", "No matching symptoms found." }
+                                                    }
+                                                    for symptom_str in matches {
+                                                        {
 
-                                                    let is_selected = selected_symptoms()
-                                                        .iter()
-                                                        .any(|s| s == &symptom_str);
+                                                            let is_selected = selected_symptoms().iter().any(|s| s == &symptom_str);
+                                                            let symptom_for_click = symptom_str.clone();
+                                                            rsx! {
+                                                                button {
+                                                                    r#type: "button",
+                                                                    class: if is_selected { "flex w-full items-center justify-between rounded-xl bg-blue-50 px-4 py-3 text-left text-sm font-medium text-blue-700" } else { "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50" },
 
-                                                    rsx! {
-                                                        button {
-                                                            r#type: "button",
+                                                                    onclick: move |_| {
+                                                                        selected_symptoms
+                                                                            .with_mut(|symptoms| {
+                                                                                if let Some(pos) = symptoms.iter().position(|s| s == &symptom_for_click)
+                                                                                {
+                                                                                    symptoms.remove(pos);
+                                                                                } else {
+                                                                                    symptoms.push(symptom_for_click.clone());
+                                                                                }
+                                                                            });
+                                                                    },
 
-                                                            class: if is_selected { "flex w-full items-center justify-between rounded-xl bg-blue-50 px-4 py-3 text-left text-sm font-medium text-blue-700" } else { "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50" },
+                                                                    span { "{symptom_str}" }
 
-                                                            onclick: move |_| {
-                                                                selected_symptoms
-                                                                    .with_mut(|symptoms| {
-                                                                        if let Some(pos) = symptoms
-                                                                            .iter()
-                                                                            .position(|s| s == &symptom_str)
-                                                                        {
-                                                                            symptoms.remove(pos);
-                                                                        } else {
-                                                                            symptoms.push(symptom_str.clone());
+                                                                    if is_selected {
+                                                                        svg {
+                                                                            class: "h-5 w-5 text-blue-600",
+                                                                            fill: "none",
+                                                                            view_box: "0 0 24 24",
+                                                                            stroke: "currentColor",
+                                                                            path {
+                                                                                stroke_linecap: "round",
+                                                                                stroke_linejoin: "round",
+                                                                                stroke_width: "2",
+                                                                                d: "M5 13l4 4L19 7",
+                                                                            }
                                                                         }
-                                                                    });
-                                                            },
-
-                                                            span { "{symptom_str}" }
-
-                                                            if is_selected {
-                                                                svg {
-                                                                    class: "h-5 w-5 text-blue-600",
-                                                                    fill: "none",
-                                                                    view_box: "0 0 24 24",
-                                                                    stroke: "currentColor",
-
-                                                                    path {
-                                                                        stroke_linecap: "round",
-                                                                        stroke_linejoin: "round",
-                                                                        stroke_width: "2",
-                                                                        d: "M5 13l4 4L19 7",
                                                                     }
                                                                 }
                                                             }
@@ -305,21 +359,19 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                                         // Clear selection
                                         if !selected_symptoms().is_empty() {
                                             div { class: "border-t border-gray-100 px-4 py-3",
-
                                                 button {
                                                     r#type: "button",
                                                     class: "text-xs font-medium text-gray-500 hover:text-gray-700",
-
                                                     onclick: move |_| {
                                                         selected_symptoms.set(Vec::new());
                                                     },
-
                                                     "Clear selection"
                                                 }
                                             }
                                         }
                                     }
                                 }
+
                             }
 
                             // Summary
@@ -391,12 +443,12 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                                     onclick: move |_| async move {
                                         is_submitting.set(true);
                                         check_symptoms.set(None);
-                                        match symptom_guidance(&selected_symptoms(), &additional_symptoms()).await {
+                                        match symptom_checker(&selected_symptoms(), &additional_symptoms()).await {
                                             Ok(response) => {
                                                 check_symptoms.set(Some(response));
                                             }
                                             Err(error) => {
-                                                check_symptoms.set(Some(format!("Unable to get guidance: {}", error)));
+                                                check_symptoms.set(Some(format!("Unable to check: {}", error)));
                                             }
                                         }
                                         is_submitting.set(false);
@@ -416,18 +468,18 @@ pub fn SymptomChecker(patient_id: String) -> Element {
                 }
 
                 // AI result
-                if let Some(guidance) = check_symptoms() {
+                if let Some(checker) = check_symptoms() {
                     div { class: "mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm",
                         div { class: "mb-3 flex items-center justify-between",
 
-                            div { class: "text-lg font-semibold text-gray-900", "Symptom Guidance" }
+                            div { class: "text-lg font-semibold text-gray-900", "Symptom Checker" }
 
                             span { class: "rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700",
                                 "AI-assisted"
                             }
                         }
                         div { class: "text-sm leading-6 text-gray-600",
-                            MarkdownMessage { content: guidance }
+                            MarkdownMessage { content: checker }
                         }
                     }
                 }
