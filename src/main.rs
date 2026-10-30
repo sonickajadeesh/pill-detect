@@ -20,7 +20,7 @@ pub enum Route {
     #[route("/:patient_id/")]
     Dashboard { patient_id: String },
 
-    #[route("/:patient_id/doctor")]
+    #[route("/:patient_id/doctors")]
     FindDoctor { patient_id: String },
 
     #[route("/:patient_id/guidance")]

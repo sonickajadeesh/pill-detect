@@ -75,21 +75,30 @@ pub fn Navbar(patient_id: String) -> Element {
                         }
 
                         Link {
-                            to: Route::Guidance {
-                                patient_id: patient_id.clone(),
-                            },
-                            class: "block rounded-md px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-
-                            "Seek Guidance 💬"
-                        }
-
-                        Link {
                             to: Route::SymptomChecker {
                                 patient_id: patient_id.clone(),
                             },
                             class: "block rounded-md px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
 
                             "Symptom Checker 🤒"
+                        }
+
+                        Link {
+                            to: Route::DrugInteraction {
+                                patient_id: patient_id.clone(),
+                            },
+                            class: "block rounded-md px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+
+                            "Drug Interactions ⚠️"
+                        }
+
+                        Link {
+                            to: Route::Guidance {
+                                patient_id: patient_id.clone(),
+                            },
+                            class: "block rounded-md px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+
+                            "Seek Guidance 💬"
                         }
 
                         Link {
