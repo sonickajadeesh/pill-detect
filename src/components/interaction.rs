@@ -67,7 +67,7 @@ pub fn DrugInteraction(patient_id: String) -> Element {
 
             // Header
             h1 { class: "text-[32px] font-bold tracking-tight text-slate-900",
-                "Drug Interaction ⚠️"
+                "Drug Interactions ⚠️"
             }
 
             p { class: "mt-2 mb-8 text-base text-slate-500",
