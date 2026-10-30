@@ -2,13 +2,11 @@
 
 **An AI-powered medical assistant for medicine identification, prescription analysis, symptom assessment, medication information, and healthcare discovery.**
 
-**Live Demo:** [Pill Detect](https://sonickajadeesh.github.io/pill-detect/)
+**Live Demo:** [sonickajadeesh.github.io/pill-detect](https://sonickajadeesh.github.io/pill-detect/)
 
 ## Overview
 
-Pill Detect is a browser-based AI medical assistant built with Rust and Dioxus. It combines AI-powered medical information retrieval, patient management, prescription analysis, interactive symptom assessment, and healthcare discovery in a single application.
-
-The application uses Google Gemini for AI-powered functionality and Firebase Authentication for user authentication.
+Pill Detect is a browser-based AI medical assistant built with Rust and Dioxus. It combines AI-powered medical information retrieval, patient management, prescription analysis, interactive symptom assessment, and healthcare discovery in a single application. The application uses Google Gemini for AI-powered functionality and Firebase Authentication for user authentication.
 
 ### Key Features
 
@@ -30,9 +28,7 @@ Pill Detect is intended for informational and educational purposes and is not a 
 
 ### 👤 Patient Management
 
-Create and manage individual patient profiles.
-
-Each patient profile includes:
+Create and manage individual patient profiles. Each patient profile includes:
 
 - First and last name
 - Date of birth
@@ -42,15 +38,11 @@ Each patient profile includes:
 - Known allergies
 - Existing medical conditions
 
-Patient profiles can be created, viewed, edited, and deleted.
-
-Each patient maintains separate records, including medicine search history, conversations, prescriptions, and drug interaction history.
+Patient profiles can be created, viewed, edited, and deleted. Each patient maintains separate records, including medicine search history, conversations, prescriptions, and drug interaction history.
 
 ### 💊 Medicine Identification
 
-Identify medicines using an uploaded image of a tablet, capsule, or medicine packaging.
-
-Gemini's multimodal capabilities are used to analyze the image and retrieve relevant information, potentially including:
+Identify medicines using an uploaded image of a tablet, capsule, or medicine packaging. Gemini's multimodal capabilities are used to analyze the image and retrieve relevant information, potentially including:
 
 - Medicine name
 - Generic name
@@ -64,9 +56,7 @@ The identified medicine can subsequently be used to retrieve more detailed medic
 
 ### 🔎 Medicine Information
 
-Search for medicines to retrieve relevant medication information.
-
-Information may include:
+Search for medicines to retrieve relevant medication information. Information may include:
 
 - Brand and generic names
 - Medical uses
@@ -75,15 +65,11 @@ Information may include:
 - Warnings and precautions
 - Prescription requirements
 
-Medicine searches are powered by Gemini and use instructions designed to prioritize reliable medical information rather than generate unsupported answers.
-
-Previous medicine searches are saved in the corresponding patient's search history.
+Medicine searches are powered by Gemini and use instructions designed to prioritize reliable medical information rather than generate unsupported answers. Previous medicine searches are saved in the corresponding patient's search history.
 
 ### 📋 Prescription Analysis and Management
 
-Upload an image of a medical prescription and use AI-powered image analysis to extract prescribed medications.
-
-The analysis can identify:
+Upload an image of a medical prescription and use AI-powered image analysis to extract prescribed medications. The analysis can identify:
 
 - Medicine names
 - Strength
@@ -91,26 +77,16 @@ The analysis can identify:
 - Duration
 - Administration instructions
 
-Extracted prescription information can be saved to the patient's profile.
-
+Extracted prescription information can be saved to the patient's profile 
 Prescriptions can subsequently be viewed, edited, and deleted.
 
 **Prescription Expiration Management**
 
-Prescription expiration is managed manually using an active/expired toggle.
-
-Each prescription maintains an `expired` boolean field:
-
-- `true` – Prescription marked as expired.
-- `false` – Prescription marked as active.
-
-This allows users to manage prescription status without requiring an expiry date.
+Prescription expiration is managed manually using an active/expired toggle. This allows users to manage prescription status without requiring an expiry date.
 
 ### 🩻 Interactive Symptom Checker
 
-Pill Detect includes an interactive human body map that allows users to identify where they are experiencing symptoms.
-
-Users can:
+Pill Detect includes an interactive human body map that allows users to identify where they are experiencing symptoms. Users can:
 
 1. Select an anatomical region using the interactive body map.
 2. Alternatively, select a body part using the searchable body-part selector.
@@ -118,15 +94,11 @@ Users can:
 4. Add additional symptoms when necessary.
 5. Submit the selected symptoms for AI-powered assessment.
 
-The application uses Gemini to provide informational guidance based on the selected symptoms.
-
-The body map supports multiple anatomical regions, including the head, face, neck, chest, abdomen, back, arms, hands, legs, and feet.
+The application uses Gemini to provide informational guidance based on the selected symptoms. The body map supports multiple anatomical regions, including the head, face, neck, chest, abdomen, back, arms, hands, legs, and feet.
 
 ### 💬 Conversational Health Guidance
 
-The health guidance feature provides an AI-powered conversational interface for medical and health-related questions.
-
-Features include:
+The health guidance feature provides an AI-powered conversational interface for medical and health-related questions. Features include:
 
 - Conversational medical assistance
 - Patient-specific conversation history
@@ -138,9 +110,7 @@ The AI is instructed to communicate responsibly, avoid unsupported diagnoses, ac
 
 ### ⚠️ Drug Interaction Checker
 
-Check multiple medications for potential drug interactions and safety concerns.
-
-The interaction checker considers:
+Check multiple medications for potential drug interactions and safety concerns. The interaction checker considers:
 
 - Drug-to-drug interactions
 - Potential adverse effects
@@ -154,9 +124,7 @@ Interaction searches can be saved to the patient's interaction history for futur
 
 ### 🧑‍⚕️ Find Doctors
 
-Find healthcare professionals and specialists based on their medical specialization and location.
-
-Available specialties include:
+Find healthcare professionals and specialists based on their medical specialization and location. Available specialties include:
 
 - General Physician
 - Cardiologist
@@ -170,25 +138,11 @@ Available specialties include:
 - ENT
 - Ophthalmologist
 
-Users can enter a location manually or use device geolocation to help determine their current location.
-
-The application uses AI-powered search functionality to retrieve relevant doctor information.
+Users can enter a location manually or use device geolocation to help determine their current location. The application uses AI-powered search functionality to retrieve relevant doctor information.
 
 ## 🧠 Application Architecture
 
-Pill Detect uses a modular Rust and Dioxus architecture.
-
-The application separates its user interface, API communication, authentication, data management, geolocation, and AI prompt definitions into dedicated modules.
-
-### AI Architecture
-
-Google Gemini powers the application's AI functionality.
-
-The application communicates directly with the Gemini API using HTTP requests through `reqwest`.
-
-Text-based requests and multimodal image requests are handled separately.
-
-## 🧠 Application Architecture
+Pill Detect uses a modular Rust and Dioxus architecture. The application separates its user interface, API communication, authentication, data management, geolocation, and AI prompt definitions into dedicated modules.
 
 ```mermaid
 flowchart TB
@@ -220,54 +174,49 @@ flowchart TB
     class E1,E2,E3,E4,E5,E6 feature
 ```
 
-## 📁 Project Structure
+### AI Architecture
 
-```mermaid
-flowchart TB
-    ROOT["📁 pill-detect"]
+Google Gemini powers the application's AI functionality. The application communicates directly with the Gemini API using HTTP requests through `reqwest`. Text-based requests and multimodal image requests are handled separately.
 
-    ROOT --> GH["📁 .github"]
-    ROOT --> ASSETS["📁 assets"]
-    ROOT --> SRC["📁 src"]
-    ROOT --> CARGO["📄 Cargo.toml"]
-    ROOT --> DIOXUS["📄 Dioxus.toml"]
-    ROOT --> BUILD["📄 build.rs"]
-    ROOT --> CSS["🎨 tailwind.css"]
+### Project Structure
 
-    GH --> WF["📁 workflows"]
-
-    SRC --> COMP["📁 components"]
-    SRC --> MOD["📁 modules"]
-    SRC --> MAIN["📄 main.rs"]
-
-    COMP --> AUTH["auth.rs"]
-    COMP --> CHECK["checker.rs"]
-    COMP --> DASH["dashboard.rs"]
-    COMP --> FOOT["footer.rs"]
-    COMP --> GUIDE["guidance.rs"]
-    COMP --> HOME["homepage.rs"]
-    COMP --> INFO["information.rs"]
-    COMP --> INTER["interaction.rs"]
-    COMP --> NAV["navbar.rs"]
-    COMP --> PRES["prescription.rs"]
-
-    MOD --> API["api.rs"]
-    MOD --> BODY["bodymap.rs"]
-    MOD --> DB["database.rs"]
-    MOD --> FIRE["firebase_auth.rs"]
-    MOD --> GEO["geolocation.rs"]
-    MOD --> PROMPT["prompts.rs"]
-    MOD --> UTIL["utilities.rs"]
-
-    classDef root fill:#1e40af,color:#fff,stroke:#1e3a8a,stroke-width:2px
-    classDef folder fill:#dbeafe,color:#1e3a8a,stroke:#60a5fa,stroke-width:1.5px
-    classDef file fill:#f1f5f9,color:#334155,stroke:#94a3b8
-    classDef config fill:#dcfce7,color:#166534,stroke:#86efac
-
-    class ROOT root
-    class GH,ASSETS,SRC,COMP,MOD,WF folder
-    class AUTH,CHECK,DASH,FOOT,GUIDE,HOME,INFO,INTER,NAV,PRES,API,BODY,DB,FIRE,GEO,PROMPT,UTIL,MAIN file
-    class CARGO,DIOXUS,BUILD,CSS config
+```text
+pill-detect
+│
+├── .github
+│   └── workflows
+│
+├── assets
+│
+├── src
+│   │
+│   ├── components
+│   │   ├── auth.rs
+│   │   ├── checker.rs
+│   │   ├── dashboard.rs
+│   │   ├── footer.rs
+│   │   ├── guidance.rs
+│   │   ├── homepage.rs
+│   │   ├── information.rs
+│   │   ├── interaction.rs
+│   │   ├── navbar.rs
+│   │   └── prescription.rs
+│   │
+│   ├── modules
+│   │   ├── api.rs
+│   │   ├── bodymap.rs
+│   │   ├── database.rs
+│   │   ├── firebase_auth.rs
+│   │   ├── geolocation.rs
+│   │   ├── prompts.rs
+│   │   └── utilities.rs
+│   │
+│   └── main.rs
+│
+├── Cargo.toml
+├── Dioxus.toml
+├── build.rs
+└── tailwind.css
 ```
 
 ## 🛠️ Tech Stack
@@ -295,21 +244,15 @@ Pill Detect requires two API configurations.
 
 ### 1. Google Gemini API
 
-A Gemini API key is required for AI-powered features.
+A Gemini API key is required for AI-powered features. When the application needs an API key, it prompts the user to enter one. The key is stored in browser `localStorage` and reused for subsequent requests.
 
-When the application needs an API key, it prompts the user to enter one. The key is stored in browser `localStorage` and reused for subsequent requests.
-
-You can obtain an API key from:
-
-[Google AI Studio – Get API Key](https://aistudio.google.com/apikey)
+You can obtain an API key from: [Google AI Studio – Get API Key](https://aistudio.google.com/apikey)
 
 The stored Gemini API key can be cleared or replaced from the application dashboard.
 
 ### 2. Firebase API Key
 
-Firebase Authentication is used for email/password registration and sign-in.
-
-To configure Firebase:
+Firebase Authentication is used for email/password registration and sign-in. To configure Firebase:
 
 1. Create a project in [Google Firebase](https://console.firebase.google.com/).
 2. Register a web application.
@@ -335,9 +278,7 @@ The application uses Dioxus Router for patient-specific navigation.
 
 ## 🔐 Privacy and Data Storage
 
-Pill Detect uses browser-based storage for patient records and associated application data.
-
-The following information is stored locally using browser `localStorage`:
+Pill Detect uses browser-based storage for patient records and associated application data. The following information is stored locally using browser `localStorage`:
 
 - Patient profiles
 - Medicine search history
@@ -360,10 +301,9 @@ Firebase is used for authentication; patient medical records are not currently s
 
 ## 🚀 Deployment
 
-Pill Detect is configured for a Dioxus Web build and deployment to GitHub Pages.
-GitHub Actions is used to automate the deployment process.
+Pill Detect is configured for a Dioxus Web build and deployment to GitHub Pages. GitHub Actions is used to automate the deployment process.
 
-**Live Application:** https://sonickajadeesh.github.io/pill-detect/
+**Live Application:** [sonickajadeesh.github.io/pill-detect](https://sonickajadeesh.github.io/pill-detect/)
 
 ## 🔧 Development Setup (Windows)
 
@@ -429,7 +369,7 @@ dx --version
 Clone the project:
 
 ```powershell
-git clone https://github.com/sonickajadeesh/pill-detect.git
+git clone --depth=1 https://github.com/sonickajadeesh/pill-detect.git
 ```
 
 Navigate into the project directory:
@@ -448,9 +388,7 @@ Alternatively, open the project directory manually through VS Code.
 
 ### Step 6: Configure Environment Variables
 
-Create a `.env` file in the project's root directory.
-
-Add your Firebase API key:
+Create a `.env` file in the project's root directory. Add your Firebase API key:
 
 ```env
 FIREBASE_API_KEY=your-firebase-api-key
